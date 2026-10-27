@@ -1,0 +1,19 @@
+LANBrowser.xcodeproj/xcshareddata/xcodecloud/manifest.json
+  s_0aa690c2213aaf::t_7db71e6cadbaff 1-9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3780cec9640fea7bb3e1f12b6906c437365434ca",
+  "prompts": {},
+  "sessions": {
+    "s_0aa690c2213aaf": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "9f9e1e6a-e2bb-4e6f-9120-a67f84041dc6",
+        "model": "unknown"
+      },
+      "human_author": "jesse goodier <31039225+jessegoodier@users.noreply.github.com>"
+    }
+  }
+}
