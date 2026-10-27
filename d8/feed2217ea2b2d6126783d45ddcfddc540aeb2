@@ -1,0 +1,19 @@
+LANBrowser.xcodeproj/project.pbxproj
+  s_0aa690c2213aaf::t_7d8d4359af4962 193
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "d8feed2217ea2b2d6126783d45ddcfddc540aeb2",
+  "prompts": {},
+  "sessions": {
+    "s_0aa690c2213aaf": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "9f9e1e6a-e2bb-4e6f-9120-a67f84041dc6",
+        "model": "grok-4.7"
+      },
+      "human_author": "jesse goodier <31039225+jessegoodier@users.noreply.github.com>"
+    }
+  }
+}
