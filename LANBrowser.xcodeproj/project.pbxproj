@@ -1,0 +1,266 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 110;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0000000000000000000000C8 /* Address.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000064 /* Address.swift */; };
+		0000000000000000000000C9 /* Bookmarks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000065 /* Bookmarks.swift */; };
+		0000000000000000000000CA /* BrowserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000066 /* BrowserModel.swift */; };
+		0000000000000000000000CB /* BrowserScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000067 /* BrowserScreen.swift */; };
+		0000000000000000000000CC /* LANBrowserApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000068 /* LANBrowserApp.swift */; };
+		0000000000000000000000CD /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000069 /* Assets.xcassets */; };
+		0000000000000000000000CF /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000006B /* PrivacyInfo.xcprivacy */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		00000000000000000000000A /* LAN Browser.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "LAN Browser.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		000000000000000000000064 /* Address.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Address.swift; sourceTree = "<group>"; };
+		000000000000000000000065 /* Bookmarks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Bookmarks.swift; sourceTree = "<group>"; };
+		000000000000000000000066 /* BrowserModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserModel.swift; sourceTree = "<group>"; };
+		000000000000000000000067 /* BrowserScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserScreen.swift; sourceTree = "<group>"; };
+		000000000000000000000068 /* LANBrowserApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LANBrowserApp.swift; sourceTree = "<group>"; };
+		000000000000000000000069 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		00000000000000000000006A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		00000000000000000000006B /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		000000000000000000000007 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		000000000000000000000003 = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000004 /* LANBrowser */,
+				000000000000000000000005 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		000000000000000000000004 /* LANBrowser */ = {
+			isa = PBXGroup;
+			children = (
+				000000000000000000000064 /* Address.swift */,
+				000000000000000000000065 /* Bookmarks.swift */,
+				000000000000000000000066 /* BrowserModel.swift */,
+				000000000000000000000067 /* BrowserScreen.swift */,
+				000000000000000000000068 /* LANBrowserApp.swift */,
+				000000000000000000000069 /* Assets.xcassets */,
+				00000000000000000000006A /* Info.plist */,
+				00000000000000000000006B /* PrivacyInfo.xcprivacy */,
+			);
+			path = LANBrowser;
+			sourceTree = "<group>";
+		};
+		000000000000000000000005 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				00000000000000000000000A /* LAN Browser.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		000000000000000000000002 /* LANBrowser */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 000000000000000000000015 /* Build configuration list for PBXNativeTarget "LANBrowser" */;
+			buildPhases = (
+				000000000000000000000006 /* Sources */,
+				000000000000000000000007 /* Frameworks */,
+				000000000000000000000008 /* Resources */,
+			);
+			buildRules = (
+			);
+			name = LANBrowser;
+			productName = "LAN Browser";
+			productReference = 00000000000000000000000A /* LAN Browser.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		000000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 2710;
+				TargetAttributes = {
+					000000000000000000000002 = {
+						CreatedOnToolsVersion = 27.1;
+					};
+				};
+			};
+			buildConfigurationList = 000000000000000000000014 /* Build configuration list for PBXProject "LANBrowser" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 000000000000000000000003;
+			preferredProjectObjectVersion = 110;
+			productRefGroup = 000000000000000000000005 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				000000000000000000000002 /* LANBrowser */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		000000000000000000000008 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+				0000000000000000000000CD /* Assets.xcassets in Resources */,
+				0000000000000000000000CF /* PrivacyInfo.xcprivacy in Resources */,
+			);
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		000000000000000000000006 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+				0000000000000000000000C8 /* Address.swift in Sources */,
+				0000000000000000000000C9 /* Bookmarks.swift in Sources */,
+				0000000000000000000000CA /* BrowserModel.swift in Sources */,
+				0000000000000000000000CB /* BrowserScreen.swift in Sources */,
+				0000000000000000000000CC /* LANBrowserApp.swift in Sources */,
+			);
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		00000000000000000000001E /* Debug configuration for PBXProject "LANBrowser" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		00000000000000000000001F /* Release configuration for PBXProject "LANBrowser" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 5.0;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		000000000000000000000020 /* Debug configuration for PBXNativeTarget "LANBrowser" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = F262HGBZR2;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = LANBrowser/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = LANBrowser;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				IPHONEOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_IPHONEOS_DEPLOYMENT_TARGET)";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jesse.lanbrowser;
+				PRODUCT_NAME = "LAN Browser";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		000000000000000000000021 /* Release configuration for PBXNativeTarget "LANBrowser" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3Z97LF548X;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = LANBrowser/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = LANBrowser;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				IPHONEOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_IPHONEOS_DEPLOYMENT_TARGET)";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jesse.lanbrowser;
+				PRODUCT_NAME = "LAN Browser";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		000000000000000000000014 /* Build configuration list for PBXProject "LANBrowser" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				00000000000000000000001E /* Debug configuration for PBXProject "LANBrowser" */,
+				00000000000000000000001F /* Release configuration for PBXProject "LANBrowser" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		000000000000000000000015 /* Build configuration list for PBXNativeTarget "LANBrowser" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				000000000000000000000020 /* Debug configuration for PBXNativeTarget "LANBrowser" */,
+				000000000000000000000021 /* Release configuration for PBXNativeTarget "LANBrowser" */,
+			);
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 000000000000000000000001 /* Project object */;
+}
