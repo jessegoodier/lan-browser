@@ -1,0 +1,9 @@
+{
+  "id" : "0a637b61-02ee-4a34-9bff-b7701dc45659",
+  "targets" : [
+    {
+      "id" : "cde44b2d-7baa-4e80-a595-2b2d88c27207",
+      "name" : "LANBrowser"
+    }
+  ]
+}
