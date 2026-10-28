@@ -232,7 +232,7 @@ final class BrowserModel: NSObject, ObservableObject {
 
     func navigate(_ input: String) -> Bool {
         guard let url = BrowserAddress.parse(input) else {
-            message = "Enter a web address such as omarchy:8888 or http://192.168.1.20:8080/."
+            message = "Enter a web address such as httpforever.com or http://192.168.1.20:8080/."
             return false
         }
         requestedURL = url
@@ -287,7 +287,7 @@ final class BrowserModel: NSObject, ObservableObject {
         let nsError = error as NSError
         guard nsError.code != NSURLErrorCancelled,
               !(nsError.domain == "WebKitErrorDomain" && nsError.code == 102) else { return }
-        pageError = "Couldn’t load this page. Check that you’re on your home Wi-Fi and that the address and port are correct.\n\n\(error.localizedDescription)"
+        pageError = "Couldn’t load this page. On a home network, check the address and port. On public Wi-Fi, open HTTP Forever so the captive portal can show its sign-in page.\n\n\(error.localizedDescription)"
         synchronize()
     }
 }

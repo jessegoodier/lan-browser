@@ -1,10 +1,12 @@
 # LAN Browser
 
-A small, single-page iPhone browser for home services. Built with SwiftUI and WebKit for iOS 27.0 or later; intended for iPhone 17 Pro on iOS 27.0.1. The project uses the installed Xcode 27.1 and has no dependencies to install.
+A small, single-page iPhone browser for home services and captive-portal Wi-Fi. Built with SwiftUI and WebKit for iOS 27.0 or later; intended for iPhone 17 Pro on iOS 27.0.1. The project uses the installed Xcode 27.1 and has no dependencies to install.
+
+Plain HTTP is the point. Home servers often have no certificate, and hotel, cafe, train, and airport networks can only show their sign-in page by intercepting an HTTP request. HTTPS sites turn that interception into a certificate warning. [HTTP Forever](http://httpforever.com/) is a public plain-HTTP page made for that captive-portal case.
 
 ## What is included
 
-- Bookmarks home screen on fresh launch, seeded with **Omarchy — http://omarchy:8888/**.
+- Bookmarks home screen on fresh launch, seeded with **HTTP Forever Captive Portal — http://httpforever.com/**. Use it to reach a Wi-Fi sign-in page, then add your own LAN bookmarks.
 - Bottom address bar; omitted schemes default to HTTP. Explicit HTTPS and server redirects work normally.
 - Back, Forward, Reload/Stop, swipe navigation, loading state, and retryable errors.
 - Add, edit, delete, and reorder bookmarks, stored on the device.
@@ -25,16 +27,21 @@ The book button opens bookmarks; from bookmarks, the globe button returns to the
 7. If requested, enable **Settings > Privacy & Security > Developer Mode** on the iPhone, restart, and confirm enabling it. This is for direct Xcode installation; TestFlight installation does not require it.
 8. Select your iPhone in the run destination menu next to the scheme. If it is missing, open **Window > Devices and Simulators** and finish pairing/device preparation. Install an iOS platform component in Xcode Settings if Xcode requests it.
 9. Press **⌘R**. Xcode will sign, install, and launch LAN Browser. Resolve any signing issue shown in Signing & Capabilities before continuing.
-10. Connect the phone to your home Wi-Fi. Tap **Omarchy** and confirm the page loads.
+10. Connect the phone to your home Wi-Fi. Tap **HTTP Forever Captive Portal** and confirm [http://httpforever.com/](http://httpforever.com/) loads. On a network that requires sign-in, that same bookmark should be replaced by the captive-portal login page.
 
 You can subsequently launch the installed app from its Home Screen icon without the USB cable. On later fresh launches it opens bookmarks; returning to the app from the background keeps the page.
 
-### If Omarchy does not load
+### If a home service does not load
 
-- Try the exact address **http://omarchy:8888/** in Safari on the same iPhone. The app uses iOS’s normal DNS resolver; it does not discover machines or invent an IP address for `omarchy`.
-- If Safari also fails, try **http://YOUR_SERVER_LAN_IP:8888/**. If the IP works, fix your home DNS or edit the bookmark to use the IP. A `.local` address is another option only if that machine actually advertises one.
-- Ensure the service listens on the LAN interface rather than only `127.0.0.1`, its firewall permits port 8888, and the phone is not on an isolated guest Wi-Fi network.
+- Try the exact address in Safari on the same iPhone. The app uses iOS’s normal DNS resolver; it does not discover machines or invent an IP address for a hostname.
+- If Safari also fails, try **http://YOUR_SERVER_LAN_IP:PORT/**. If the IP works, fix your home DNS or edit the bookmark to use the IP. A `.local` address is another option only if that machine actually advertises one.
+- Ensure the service listens on the LAN interface rather than only `127.0.0.1`, its firewall permits the port, and the phone is not on an isolated guest Wi-Fi network.
 - The ATS settings allow HTTP inside the browser. They do not repair DNS, bypass server authentication, or accept invalid HTTPS certificates.
+
+### If a captive portal does not appear
+
+- Stay on **http://httpforever.com/**. Opening an HTTPS site usually produces a certificate warning instead of the login page, and that warning should not be bypassed.
+- Join the Wi-Fi network again, then reload HTTP Forever. Some portals only intercept the first plain-HTTP request after association.
 
 ## 2. Install through your personal TestFlight group
 
@@ -47,9 +54,9 @@ Do this after the direct device test succeeds. Your own account can be an intern
 5. When Organizer opens, select the new archive and choose **Distribute App**. Choose the TestFlight internal-testing route if offered. Otherwise choose **App Store Connect > Upload** and restrict the build to internal testing if offered. Leave automatic signing enabled and complete validation/upload.
 6. Wait for processing in **App Store Connect > My Apps > your app > TestFlight**. If Apple shows a missing agreement, compliance question, or other processing issue, resolve the specific item shown before adding the build.
 7. Under **Internal Testing**, create a group such as **Personal**. Add your own App Store Connect account to the group. As the paid account holder, your account has an eligible role.
-8. Add the processed build to the group. Optionally enable automatic distribution for subsequent builds. Suggested testing notes: “Home LAN browser. On home Wi-Fi, open the Omarchy bookmark at http://omarchy:8888/. Test bookmark editing and Save to Files downloads.”
+8. Add the processed build to the group. Optionally enable automatic distribution for subsequent builds. Suggested testing notes: “Home LAN and captive-portal browser. On home Wi-Fi, open HTTP Forever at http://httpforever.com/. On a sign-in network, confirm the portal replaces that page. Test bookmark editing and Save to Files downloads.”
 9. Install Apple’s **TestFlight** app on your iPhone. Open the internal-testing invitation on that phone, accept it, and install LAN Browser.
-10. Open LAN Browser from TestFlight and repeat the Omarchy/download checks below. Keep the same bundle identifier when moving from the development build to TestFlight.
+10. Open LAN Browser from TestFlight and repeat the HTTP Forever, LAN, and download checks below. Keep the same bundle identifier when moving from the development build to TestFlight.
 
 **Each TestFlight build expires after 90 days.** Before expiration, increase the target’s **General > Identity > Build** number (for example, 1 → 2), archive, upload, and add the replacement to your internal group. You can leave Version at 1.0 while increasing Build. Keep backups of important bookmarks before uninstalling: deleting the app removes its local data.
 
@@ -77,7 +84,8 @@ An unsigned build cannot be installed on your iPhone or uploaded to TestFlight. 
 
 ### Physical-device acceptance checks
 
-- First launch shows Omarchy in bookmarks. Launch it, type `omarchy:8888` manually, and verify the correct service loads over HTTP.
+- First launch shows **HTTP Forever Captive Portal** in bookmarks. Open it and confirm [http://httpforever.com/](http://httpforever.com/) loads over HTTP. On a captive network, confirm the sign-in page appears instead.
+- Add a home-service bookmark such as `192.168.1.20:8080`, open it, and verify the service loads over HTTP.
 - Navigate between pages; check Back, Forward, Reload, Stop, and swipe navigation. A new-window link should reuse the single browser page.
 - Enter an HTTPS page and test a server’s HTTP-to-HTTPS redirect; the bar should reflect the resulting address.
 - Add/edit a bookmark; reorder and delete bookmarks. Force-quit and relaunch: the edited list survives and the app opens bookmarks. Deleting every bookmark should leave an empty list after relaunch.

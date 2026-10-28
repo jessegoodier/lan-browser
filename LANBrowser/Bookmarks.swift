@@ -12,7 +12,7 @@ struct Bookmark: Identifiable, Codable, Equatable {
         self.url = url
     }
 
-    static let omarchy = Bookmark(title: "Omarchy", url: "http://omarchy:8888/")
+    static let httpForever = Bookmark(title: "HTTP Forever Captive Portal", url: "http://httpforever.com/")
 }
 
 @MainActor
@@ -32,7 +32,7 @@ final class BookmarkStore: ObservableObject {
                 errorMessage = "Your bookmarks could not be read. The saved file has been left in place. \(error.localizedDescription)"
             }
         } else {
-            bookmarks = [.omarchy]
+            bookmarks = [.httpForever]
             persist(bookmarks)
         }
     }

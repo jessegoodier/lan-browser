@@ -144,7 +144,7 @@ struct BrowserScreen: View {
                     .onDelete(perform: store.delete)
                     .onMove(perform: store.move)
                 } footer: {
-                    Text("Your home network, one tap away. Swipe right on a bookmark to edit it.")
+                    Text("Home services and captive-portal login pages, one tap away. HTTP Forever is plain HTTP, so hotel and cafe Wi-Fi can show their sign-in screen. Swipe right on a bookmark to edit it.")
                 }
             }
             .overlay {
@@ -246,7 +246,7 @@ private struct AddressEntry: View {
     var body: some View {
         NavigationStack {
             Form {
-                TextField("Address · omarchy:8888", text: $text)
+                TextField("Address · httpforever.com", text: $text)
                     .keyboardType(.URL)
                     .textContentType(.URL)
                     .textInputAutocapitalization(.never)
@@ -333,9 +333,9 @@ private struct BookmarkEditor: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Title") { TextField("e.g. Omarchy", text: $bookmark.title) }
+                Section("Title") { TextField("e.g. Home Server", text: $bookmark.title) }
                 Section {
-                    TextField("e.g. omarchy:8888", text: $bookmark.url)
+                    TextField("e.g. 192.168.1.20:8080", text: $bookmark.url)
                         .keyboardType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled()
                         .accessibilityLabel("Bookmark address")
                 } header: { Text("Address") } footer: {

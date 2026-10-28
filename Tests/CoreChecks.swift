@@ -10,20 +10,20 @@ struct CoreChecks {
             count += 1
         }
         let valid: [(String, String)] = [
-            ("omarchy:8888", "http://omarchy:8888"),
-            ("http://omarchy:8888/", "http://omarchy:8888/"),
-            ("omarchy:8888/path?q=hello#section", "http://omarchy:8888/path?q=hello#section"),
+            ("nas.local:8888", "http://nas.local:8888"),
+            ("http://nas.local:8888/", "http://nas.local:8888/"),
+            ("nas.local:8888/path?q=hello#section", "http://nas.local:8888/path?q=hello#section"),
             ("  server.local  ", "http://server.local"),
             ("192.168.1.20:8080/dashboard", "http://192.168.1.20:8080/dashboard"),
             ("https://example.com/", "https://example.com/"),
-            ("HTTP://omarchy:8888/", "HTTP://omarchy:8888/"),
-            ("//omarchy:8888/", "http://omarchy:8888/"),
+            ("HTTP://nas.local:8888/", "HTTP://nas.local:8888/"),
+            ("//nas.local:8888/", "http://nas.local:8888/"),
             ("[fd00::1]:8080/", "http://[fd00::1]:8080/")
         ]
         for (input, expected) in valid {
             check(BrowserAddress.parse(input)?.absoluteString == expected, "Address parsing: \(input)")
         }
-        for input in ["", "  ", "hello world", "http://", "https://", "ftp://omarchy/", "file:///tmp/a", "http://omarchy:0", "http://omarchy:65536", "http://omarchy:abc", "http://user:password@omarchy/", "omarchy\n:8888"] {
+        for input in ["", "  ", "hello world", "http://", "https://", "ftp://nas.local/", "file:///tmp/a", "http://nas.local:0", "http://nas.local:65536", "http://nas.local:abc", "http://user:password@nas.local/", "nas.local\n:8888"] {
             check(BrowserAddress.parse(input) == nil, "Reject invalid address: \(input)")
         }
 
@@ -31,7 +31,7 @@ struct CoreChecks {
         defer { try? FileManager.default.removeItem(at: directory) }
         let file = directory.appending(path: "bookmarks.json")
         let store = BookmarkStore(fileURL: file)
-        check(store.bookmarks.count == 1 && store.bookmarks[0].url == "http://omarchy:8888/", "Seed Omarchy on first launch")
+        check(store.bookmarks.count == 1 && store.bookmarks[0] == .httpForever, "Seed HTTP Forever on first launch")
         let custom = Bookmark(title: "Router", url: "http://192.168.1.1/")
         check(store.save(custom), "Save bookmark")
         var edited = custom
