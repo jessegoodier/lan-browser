@@ -1,0 +1,14 @@
+LANBrowser/privacy_policy.md
+  h_cca6aa2712613d 3,5,7,12,23,29,32,38,40-41
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "41cf78a3e9c47a176c974c0840a31d7e715e0a06",
+  "prompts": {},
+  "humans": {
+    "h_cca6aa2712613d": {
+      "author": "jesse goodier <31039225+jessegoodier@users.noreply.github.com>"
+    }
+  }
+}
