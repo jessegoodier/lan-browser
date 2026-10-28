@@ -243,6 +243,40 @@ final class BrowserModel: NSObject, ObservableObject {
         return true
     }
 
+    func openBrowserCheck() {
+        requestedURL = URL(string: "about:blank")
+        address = "about:blank"
+        pageError = nil
+        showingBookmarks = false
+        webView.loadHTMLString("""
+        <!doctype html><html lang="en"><head>
+        <meta name="viewport" content="width=device-width,initial-scale=1">
+        <title>Browser Check</title>
+        <style>body{font:18px system-ui;padding:24px;line-height:1.5;color-scheme:light dark}a,button{font:inherit}li{margin:20px 0}</style>
+        </head><body><h1>Browser Check</h1>
+        <p>If you can read this page, page rendering works. This check is built into LAN Browser and does not contact a server.</p>
+        <ul><li><button onclick="const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['LAN Browser download works.\\n'],{type:'application/octet-stream'}));a.download='lan-browser-check.txt';document.body.appendChild(a);a.click();a.remove();">Save a sample file</button></li>
+        <li><a href="http://httpforever.com/">Open HTTP Forever (internet or captive Wi-Fi required)</a></li>
+        <li><a href="https://example.com/">Open an HTTPS page (internet required)</a></li></ul>
+        <p>Save the sample file to Files, then open it to check its contents. Keep LAN Browser open until the save finishes.</p>
+        <p>This local check does not test Wi-Fi portal interception or connectivity to your home server.</p>
+        </body></html>
+        """, baseURL: nil)
+    }
+
+    func clearWebsiteData() async {
+        webView.stopLoading()
+        // Unload the current page so it cannot immediately recreate cookies or storage.
+        requestedURL = nil
+        address = ""
+        title = ""
+        pageError = nil
+        showingBookmarks = true
+        webView.loadHTMLString("", baseURL: nil)
+        await webView.configuration.websiteDataStore.removeData(
+            ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(), modifiedSince: .distantPast)
+    }
+
     func back() { pageError = nil; webView.goBack() }
     func forward() { pageError = nil; webView.goForward() }
     func reloadOrStop() {

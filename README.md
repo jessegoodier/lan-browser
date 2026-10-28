@@ -1,6 +1,6 @@
 # LAN Browser
 
-A small, single-page iPhone browser for home services and captive-portal Wi-Fi. Built with SwiftUI and WebKit for iOS 27.0 or later; intended for iPhone 17 Pro on iOS 27.0.1. The project uses the installed Xcode 27.1 and has no dependencies to install.
+A small, single-page iPhone browser for home services and captive-portal Wi-Fi. Built with SwiftUI and WebKit; the current Xcode-recommended deployment target resolves to iOS 17.0. Intended for iPhone 17 Pro on iOS 27.0.1. The project uses the installed Xcode 27.1 and has no dependencies to install.
 
 Plain HTTP is the point. Home servers often have no certificate, and hotel, cafe, train, and airport networks can only show their sign-in page by intercepting an HTTP request. HTTPS sites turn that interception into a certificate warning. [HTTP Forever](http://httpforever.com/) is a public plain-HTTP page made for that captive-portal case.
 
@@ -15,6 +15,12 @@ Plain HTTP is the point. Home servers often have no certificate, and hotel, cafe
 - System appearance, accessible control labels, and portrait/landscape layouts.
 
 The book button opens bookmarks; from bookmarks, the globe button returns to the current page. Swipe right on a bookmark or long-press it to edit. Swipe left to delete, or tap **Edit** to delete/reorder.
+
+## App Store preparation
+
+See [App Store submission](APP_STORE_SUBMISSION.md) for listing copy, review instructions, HTTP exception justification, and release checks. [Support](SUPPORT.md) and the [privacy policy](LANBrowser/privacy_policy.md) provide the public support and policy pages once published to the repository.
+
+Open **Bookmarks > Help & Privacy** for the bundled offline privacy policy, GitHub support, **Clear Cookies & Website Data**, and **Run Browser Check**. The browser check renders locally and offers a sample Save to Files download without a LAN server or internet connection.
 
 ## 1. Run it on your iPhone first
 
@@ -83,6 +89,10 @@ xcodebuild -project LANBrowser.xcodeproj -scheme LANBrowser \
 An unsigned build cannot be installed on your iPhone or uploaded to TestFlight. Normal Xcode installation/archive must use your developer team.
 
 ### Physical-device acceptance checks
+
+- From Bookmarks, open **Help & Privacy**. Verify the privacy policy is readable offline and the support link opens GitHub Issues.
+- Run **Browser Check** offline, save the sample file, and open it in Files.
+- Sign in to a test website, then use **Clear Cookies & Website Data**. Confirm the website session is signed out and bookmarks/exported files remain.
 
 - First launch shows **HTTP Forever Captive Portal** in bookmarks. Open it and confirm [http://httpforever.com/](http://httpforever.com/) loads over HTTP. On a captive network, confirm the sign-in page appears instead.
 - Add a home-service bookmark such as `192.168.1.20:8080`, open it, and verify the service loads over HTTP.

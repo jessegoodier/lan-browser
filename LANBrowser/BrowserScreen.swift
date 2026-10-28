@@ -31,6 +31,7 @@ struct BrowserScreen: View {
     @ViewState private var exportingDownload = false
     @ViewState private var editingAddress = false
     @ViewState private var showingInfo = false
+    @ViewState private var showingHelp = false
 
     var body: some View {
         // The browser controls live in the system bottom toolbar so that on the
@@ -71,6 +72,12 @@ struct BrowserScreen: View {
         .onChange(of: browser.export?.id) { _, _ in presentPendingDownload() }
         .sheet(isPresented: $editingAddress) {
             AddressEntry(text: $addressInput) { open(addressInput) }
+        }
+        .sheet(isPresented: $showingHelp) {
+            BrowserHelpSheet(browser: browser) {
+                showingHelp = false
+                browser.openBrowserCheck()
+            }
         }
         .sheet(isPresented: $showingInfo) {
             PageInfoSheet(info: browser.pageInfo())
@@ -179,6 +186,9 @@ struct BrowserScreen: View {
     @ToolbarContentBuilder private var browserToolbar: some ToolbarContent {
         if browser.showingBookmarks {
             ToolbarItem(placement: .topBarLeading) { EditButton().disabled(store.bookmarks.isEmpty) }
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Help & Privacy", systemImage: "questionmark.circle") { showingHelp = true }
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Add Bookmark", systemImage: "plus") { newBookmark() }
             }
@@ -381,5 +391,76 @@ private struct DownloadSavePicker: UIViewControllerRepresentable {
         init(completion: @escaping () -> Void) { self.completion = completion }
         func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) { completion() }
         func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) { completion() }
+    }
+}
+
+
+private struct BrowserHelpSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @ObservedObject var browser: BrowserModel
+    let openCheck: () -> Void
+    @ViewState private var confirmingClear = false
+    @ViewState private var clearing = false
+    @ViewState private var cleared = false
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section("Using LAN Browser") {
+                    Text("Save home-server addresses and open Wi-Fi sign-in pages. Addresses without a scheme use HTTP. HTTP traffic is not encrypted; use HTTPS when your service supports it.")
+                    Text("On public Wi-Fi, open the HTTP Forever bookmark to request the network’s sign-in page. A portal appears only when that network requires sign-in.")
+                    Text("For home services, use the same Wi-Fi network as your server and enter its hostname or IP address and port. LAN Browser does not scan for devices or bypass certificate errors.")
+                    Button("Run Browser Check", systemImage: "checkmark.circle", action: openCheck)
+                    Text("Check page rendering and Save to Files without a home server or an internet connection.").font(.caption).foregroundStyle(.secondary)
+                }
+                Section("Privacy") {
+                    NavigationLink("Privacy Policy") { PrivacyPolicyView() }
+                    Text("Bookmarks stay on this device. Websites can receive your requests and form entries and store cookies and website data. LAN Browser has no analytics, ads, or developer-operated backend.")
+                    Button(clearing ? "Clearing Website Data…" : "Clear Cookies & Website Data", role: .destructive) {
+                        confirmingClear = true
+                    }.disabled(clearing)
+                    Text("Signs you out of websites and removes their cookies, caches, and local storage. Your bookmarks and files saved to Files remain.").font(.caption).foregroundStyle(.secondary)
+                    if cleared { Text("Website data cleared.").foregroundStyle(.secondary) }
+                }
+                Section("Support") {
+                    Link("Ask for Help or Report a Problem", destination: URL(string: "https://github.com/jessegoodier/lan-browser/issues")!)
+                    Text("Support uses public GitHub Issues and requires a GitHub account to post. Do not include passwords, private server addresses, or other sensitive information.").font(.caption).foregroundStyle(.secondary)
+                }
+            }
+            .navigationTitle("Help & Privacy")
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+            .confirmationDialog("Clear all cookies and website data?", isPresented: $confirmingClear, titleVisibility: .visible) {
+                Button("Clear Website Data", role: .destructive) {
+                    clearing = true
+                    cleared = false
+                    Task { @MainActor in
+                        await browser.clearWebsiteData()
+                        clearing = false
+                        cleared = true
+                    }
+                }
+            } message: { Text("You will be signed out of websites. Bookmarks and exported downloads are kept.") }
+        }
+    }
+}
+
+private struct PrivacyPolicyView: View {
+    private var policy: String {
+        guard let url = Bundle.main.url(forResource: "privacy_policy", withExtension: "md"),
+              let text = try? String(contentsOf: url, encoding: .utf8) else {
+            return "The privacy policy could not be loaded. Please use the online policy link below."
+        }
+        return text
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                Text(policy).textSelection(.enabled)
+                Link("View Online Privacy Policy", destination: URL(string: "https://github.com/jessegoodier/lan-browser/blob/main/LANBrowser/privacy_policy.md")!)
+            }.frame(maxWidth: .infinity, alignment: .leading).padding()
+        }
+        .navigationTitle("Privacy Policy")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }

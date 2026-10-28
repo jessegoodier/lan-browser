@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0000000000000000000000D0 /* privacy_policy.md in Resources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000006C /* privacy_policy.md */; };
 		0000000000000000000000C8 /* Address.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000064 /* Address.swift */; };
 		0000000000000000000000C9 /* Bookmarks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000065 /* Bookmarks.swift */; };
 		0000000000000000000000CA /* BrowserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000066 /* BrowserModel.swift */; };
@@ -17,6 +18,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		00000000000000000000006C /* privacy_policy.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = privacy_policy.md; sourceTree = "<group>"; };
 		00000000000000000000000A /* LAN Browser.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "LAN Browser.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		000000000000000000000064 /* Address.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Address.swift; sourceTree = "<group>"; };
 		000000000000000000000065 /* Bookmarks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Bookmarks.swift; sourceTree = "<group>"; };
@@ -56,6 +58,7 @@
 				000000000000000000000069 /* Assets.xcassets */,
 				00000000000000000000006A /* Info.plist */,
 				00000000000000000000006B /* PrivacyInfo.xcprivacy */,
+				00000000000000000000006C /* privacy_policy.md */,
 			);
 			path = LANBrowser;
 			sourceTree = "<group>";
@@ -124,6 +127,7 @@
 			files = (
 				0000000000000000000000CD /* Assets.xcassets in Resources */,
 				0000000000000000000000CF /* PrivacyInfo.xcprivacy in Resources */,
+				0000000000000000000000D0 /* privacy_policy.md in Resources */,
 			);
 		};
 /* End PBXResourcesBuildPhase section */

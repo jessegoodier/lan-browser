@@ -1,41 +1,32 @@
-# Privacy Policy
+Privacy Policy — LAN Browser
+Last updated: October 27, 2026
 
-**Last Updated:** October 27, 2026
+Developer collection
+LAN Browser has no developer-operated backend, app accounts, advertising SDKs, or analytics SDKs. The developer does not receive your browsing history, bookmarks, form entries, or downloaded files through the app. The app does not track you across other companies’ apps or websites for advertising.
 
-**LAN Browser** ("we," "our," or "us") is committed to protecting your privacy. Our philosophy is simple: your data belongs to you, which is why we don't collect any of it. 
+Browsing and third-party websites
+When you open a website or home service, WebKit sends requests to that destination. The destination and its service providers can receive your IP address, request details, and any information you submit, such as login credentials or form entries. Websites may load third-party resources, use cookies and local storage, or perform their own analytics and tracking under their own privacy policies. LAN Browser does not control those websites. HTTP connections are not encrypted; other parties on the network may be able to read or modify their traffic. Use HTTPS when supported.
 
-This Privacy Policy explains how LAN Browser handles information when you use our application.
+Data on your device
+Bookmarks are stored in the app’s local storage until you edit or delete them or delete the app. WebKit stores cookies, caches, and other website data so that websites can remember sessions and preferences. LAN Browser does not maintain a separate browsing-history database. Use Help & Privacy > Clear Cookies & Website Data to remove WebKit’s stored website data and sign out of websites. This does not delete information already received by a website; contact that website to request deletion or change consent preferences. Deleting the app removes its local app data; operating-system backups may retain copies according to your backup settings.
 
----
+Downloads
+Downloads are temporarily staged inside the app before you choose a destination in Save to Files. Staged files are removed after export or cancellation, or at the next launch following an interrupted session. Exported files remain in the destination you selected, including a cloud storage provider if you chose one. Delete exported files through Files or the selected storage provider.
 
-## 1. No Personal Data Collection
-We do not collect, store, transmit, or share any personal information, usage data, or analytics when you use LAN Browser. 
+Local network
+The app connects to addresses you choose, including home services on your local network. It does not scan for devices. Enter only addresses you intend to contact.
 
-Specifically, we **do not** collect:
-* Names, email addresses, phone numbers, or physical addresses
-* IP addresses, device identifiers, or hardware specifications
-* Location data (GPS or network-based)
-* Usage metrics, crash logs, or diagnostic telemetry
+Platform services and support
+Apple may process App Store, backup, or diagnostic information according to its policies and your device settings. Debug builds used for development log website diagnostic details to the local Xcode console; this diagnostic logging is excluded from Release builds distributed through the App Store.
 
-Any information or content you create or input while using the app remains strictly on your local device. We have no access to it.
+If you contact support through GitHub Issues, GitHub processes your account and submission under its privacy policy. Issues are public, and the developer can read and respond to information you post. Do not post passwords, private addresses, browsing records, or other sensitive information. You can edit or delete your own issue content using GitHub’s controls, subject to GitHub’s policies.
 
-## 2. No Cookies or Tracking Technologies
-LAN Browser does not use cookies, web beacons, tracking pixels, local storage trackers, or any other tracking technologies to monitor your behavior or identify you.
+Children
+LAN Browser is a general-purpose browser and is not specifically directed to children. Visited websites have their own content and privacy practices. Parents and guardians should supervise access as appropriate.
 
-## 3. No Third-Party Analytics or Advertising
-We do not integrate any third-party analytics services (such as Google Analytics), advertising networks, or social media tracking SDKs into our application. Because we collect no data, there is nothing to sell, rent, or share with third parties.
+Changes and contact
+Updates to this policy will be published with a revised date. For privacy questions or app support, contact the developer through:
+https://github.com/jessegoodier/lan-browser/issues
 
-## 4. App Store & Platform Providers
-Please note that while LAN Browser does not collect any data, the platform or storefront from which you downloaded the app (such as the Apple App Store, Google Play Store, or your operating system provider) may independently collect information regarding your download and usage in accordance with their own privacy policies. We do not have control over, nor access to, the personal data collected by these third-party platforms.
-
-## 5. Children’s Privacy
-Because we do not collect any personal information from any users, LAN Browser complies with the Children’s Online Privacy Protection Act (COPPA) and similar international regulations regarding children's data.
-
-## 6. Changes to This Privacy Policy
-If our practices ever change in the future, we will update this Privacy Policy accordingly and revise the "Last Updated" date at the top of this page. Any future updates will always prioritize user transparency and privacy.
-
-## 7. Contact Us
-If you have any questions or concerns about this Privacy Policy or how LAN Browser operates, please feel free to reach out to us at:
-
-* **Email:** 31039225+jessegoodier@users.noreply.github.com
-* **Website / Repository:** https://raw.githubusercontent.com/jessegoodier/lan-browser/refs/heads/main/LANBrowser/privacy_policy.md
+Online policy:
+https://github.com/jessegoodier/lan-browser/blob/main/LANBrowser/privacy_policy.md
