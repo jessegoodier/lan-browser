@@ -56,6 +56,118 @@ struct CoreChecks {
         check(failed.errorMessage != nil, "Write errors are reported")
         check(!failed.save(custom), "Failed writes return failure")
         check(!failed.bookmarks.contains(custom), "Failed writes do not claim persistence")
-        print("Passed \(count) core checks (address parsing and bookmark persistence).")
+
+        if CommandLine.arguments.count > 1 {
+            let plistTypes = try JSONDecoder().decode([String].self, from: Data(CommandLine.arguments[1].utf8))
+            check(plistTypes == ServiceCatalog.types, "NSBonjourServices matches ServiceCatalog.types")
+        }
+        let mapped: [(String, String, Int, [String: String], String)] = [
+            ("_http._tcp", "192.168.1.40", 80, [:], "http://192.168.1.40/"),
+            ("_http._tcp", "192.168.1.40", 8080, ["path": "admin"], "http://192.168.1.40:8080/admin"),
+            ("_https._tcp", "192.168.1.40", 443, ["path": "/ui"], "https://192.168.1.40/ui"),
+            ("_home-assistant._tcp", "192.168.1.5", 8123, [:], "http://192.168.1.5:8123/"),
+            ("_plexmediasvr._tcp", "192.168.1.6", 32400, [:], "http://192.168.1.6:32400/web"),
+            ("_ipp._tcp", "192.168.1.7", 631, [:], "http://192.168.1.7/"),
+            ("_ipps._tcp", "192.168.1.7", 631, [:], "https://192.168.1.7/"),
+            ("_octoprint._tcp", "192.168.1.8", 5000, ["path": "/"], "http://192.168.1.8:5000/"),
+            ("_esphomelib._tcp", "192.168.1.9", 6053, [:], "http://192.168.1.9/"),
+            ("_wled._tcp", "192.168.1.10", 80, [:], "http://192.168.1.10/")
+        ]
+        for (type, host, port, txt, expected) in mapped {
+            check(ServiceCatalog.url(type: type, host: host, port: port, txt: txt)?.absoluteString == expected, "Service URL: \(type)")
+        }
+        let printerHTTP = DiscoveredService(name: "printer", type: "_http._tcp", url: URL(string: "http://192.168.1.7/")!)
+        let printerIPP = DiscoveredService(name: "Office Printer", type: "_ipp._tcp", url: URL(string: "http://192.168.1.7/")!)
+        let nas = DiscoveredService(name: "NAS", type: "_http._tcp", url: URL(string: "http://192.168.1.40:5000/")!)
+        check(ServiceCatalog.merged([printerHTTP, printerIPP, nas]) == [nas, printerIPP], "Specific service types win duplicates")
+        check(ServiceCatalog.merged([printerIPP, printerHTTP]) == [printerIPP], "Duplicate order does not matter")
+        let brother = DiscoveredService(name: "Brother", type: "_http._tcp", url: URL(string: "http://brotherE6576F3F.local/")!, address: "10.0.0.232")
+        let bookmarkedPrinter = Set(ServiceCatalog.endpointKeys(for: URL(string: "http://10.0.0.232/")!, address: nil))
+        check(ServiceCatalog.isBookmarked(brother, bookmarked: bookmarkedPrinter), "Bookmarked IP and port hide a discovered host name")
+        check(ServiceCatalog.isBookmarked(brother, bookmarked: Set(ServiceCatalog.endpointKeys(for: URL(string: "http://BrotherE6576F3F.local:80/admin")!, address: nil))), "Host name match ignores case, path, and an explicit default port")
+        check(ServiceCatalog.isBookmarked(printerIPP, bookmarked: ["192.168.1.7:80"]), "IP-only discovery matches a bookmarked IP and port")
+        let omarchy8888 = Set(ServiceCatalog.endpointKeys(for: URL(string: "http://omarchy.local:8888/")!, address: "10.0.3.46"))
+        let omarchy3000 = DiscoveredService(name: "Grafana", type: "_http._tcp", url: URL(string: "http://omarchy.local:3000/")!, address: "10.0.3.46")
+        check(!ServiceCatalog.isBookmarked(omarchy3000, bookmarked: omarchy8888), "Another port on a bookmarked device stays listed")
+        let omarchyByIP = DiscoveredService(name: "Dev", type: "_http._tcp", url: URL(string: "http://10.0.3.46:8888/")!)
+        check(ServiceCatalog.isBookmarked(omarchyByIP, bookmarked: omarchy8888), "Bookmarked host name matches discovery by its last-seen IP")
+        check(!ServiceCatalog.isBookmarked(brother, bookmarked: Set(ServiceCatalog.endpointKeys(for: URL(string: "https://10.0.0.232/")!, address: nil))), "HTTPS bookmark on 443 doesn’t hide the HTTP page on 80")
+        for host in ["nas.local", "NAS.LOCAL", "nas", "localhost", "10.0.0.2", "172.20.1.1", "192.168.1.1", "169.254.3.4", "127.0.0.1", "fe80::1", "fd00::1", "::1"] {
+            check(ServiceCatalog.isLocalHost(host), "Local host: \(host)")
+        }
+        for host in ["httpforever.com", "8.8.8.8", "172.32.0.1", "192.169.1.1", "2001:db8::1"] {
+            check(!ServiceCatalog.isLocalHost(host), "Internet host: \(host)")
+        }
+
+        let target = DiagnosticTarget(url: URL(string: "http://nas.local:8080/dashboard")!)!
+        check(target.host == "nas.local" && target.port == 8080 && !target.secure && target.path == "/dashboard", "Diagnostic target from URL")
+        check(target.hostHeader == "nas.local:8080" && target.isLocal, "Host header keeps a non-default port")
+        check(DiagnosticTarget(url: URL(string: "https://[fd00::1]/")!)?.hostHeader == "[fd00::1]", "IPv6 host header uses brackets")
+        check(DiagnosticTarget(url: URL(string: "about:blank")!) == nil, "Only HTTP and HTTPS can be diagnosed")
+        let response = "HTTP/1.1 404 Not Found\r\nserver: nginx/1.25\r\nContent-Length: 0\r\n\r\nServer: body"
+        check(DiagnosticsText.statusCode(in: response) == 404, "Parse HTTP status code")
+        check(DiagnosticsText.header("Server", in: response) == "nginx/1.25", "Parse header case-insensitively, ignoring the body")
+        check(DiagnosticsText.statusCode(in: "SSH-2.0-OpenSSH_9.6\r\n") == nil, "Non-HTTP banner has no status")
+        check(DiagnosticsText.advice(for: .refused, target: target).contains("port 8080"), "Refused advice names the port")
+        check(DiagnosticsText.advice(for: .nameNotFound, target: target).contains(".local"), "Lookup advice explains .local names")
+        let steps = [DiagnosticStep(kind: .network, status: .passed, detail: "Wi-Fi"), DiagnosticStep(kind: .port, status: .failed, detail: "Refused", advice: "Start it.")]
+        let report = DiagnosticsText.report(url: URL(string: "http://nas.local:8080/")!, steps: steps)
+        check(report.contains("✓ Network: Wi-Fi") && report.contains("✗ Port: Refused\n  Start it."), "Report lists each step and advice")
+
+        check(DeviceStore.key("Omarchy.LOCAL.") == "omarchy.local" && DeviceStore.key("[FD00::1]") == "fd00::1", "Device keys are normalized")
+        check(DeviceStore.isIPAddress("10.0.2.2") && DeviceStore.isIPAddress("fd00::1") && !DeviceStore.isIPAddress("omarchy.local") && !DeviceStore.isIPAddress("1.2.3.999"), "Detect IP addresses")
+        check(DeviceStore.defaultName(for: "omarchy.local") == "omarchy", "Default name drops .local")
+        check(DeviceStore.defaultName(for: "10.0.0.232", hostname: "brothere6576f3f.localdomain.") == "brothere6576f3f", "IP uses reverse-lookup name")
+        check(DeviceStore.defaultName(for: "10.0.0.232") == "10.0.0.232" && DeviceStore.defaultName(for: "httpforever.com") == "httpforever.com", "Default name falls back to the host")
+        let devicesFile = directory.appending(path: "devices.json")
+        let devices = DeviceStore(fileURL: devicesFile)
+        let omarchy = URL(string: "http://omarchy.local:8888/")!
+        check(devices.label(for: omarchy) == "omarchy:8888", "Label without a known IP")
+        devices.record(address: "10.0.2.2", for: "omarchy.local")
+        check(devices.label(for: omarchy) == "omarchy:8888 · 10.0.2.2", "Label shows name, port, and IP")
+        check(devices.label(for: URL(string: "http://omarchy.local:32400/web")!) == "omarchy:32400/web · 10.0.2.2", "Label keeps the path")
+        check(devices.rename("OMARCHY.local", to: "  Desk PC "), "Rename device")
+        check(devices.label(for: omarchy) == "Desk PC:8888 · 10.0.2.2", "Custom name is shared across host spellings")
+        devices.record(address: "10.0.2.9", for: "omarchy.local")
+        let reloaded = DeviceStore(fileURL: devicesFile)
+        check(reloaded.label(for: omarchy) == "Desk PC:8888 · 10.0.2.9", "Name survives an IP change and relaunch")
+        check(reloaded.rename("omarchy.local", to: "") && reloaded.customName(for: "omarchy.local") == nil, "Empty name restores the default")
+        check(reloaded.rename("omarchy.local", to: "omarchy") && reloaded.customName(for: "omarchy.local") == nil, "Default name is not stored as custom")
+        reloaded.record(address: "10.0.0.232", for: "10.0.0.232")
+        check(reloaded.label(for: URL(string: "http://10.0.0.232/")!) == "10.0.0.232", "IP bookmarks don’t repeat the IP")
+        reloaded.record(hostname: "brothere6576f3f.localdomain", for: "10.0.0.232")
+        check(reloaded.label(for: URL(string: "http://10.0.0.232/")!) == "brothere6576f3f", "IP bookmark shows reverse-lookup name")
+        check(reloaded.label(for: URL(string: "http://nas.local/")!, address: "10.0.0.5") == "nas · 10.0.0.5", "Discovery address is used when none is stored")
+
+        check(!TabPolicy.opensNewTab(currentTabIsBlank: true, preference: .newTab), "A blank tab is filled, not left behind")
+        check(TabPolicy.opensNewTab(currentTabIsBlank: false, preference: .newTab), "New Tab preference opens a tab")
+        check(!TabPolicy.opensNewTab(currentTabIsBlank: false, preference: .currentTab), "Current Tab preference replaces the page")
+        let tabStore = TabStore(fileURL: directory.appending(path: "tabs.json"))
+        check(tabStore.load() == nil, "No saved tabs on first launch")
+        let savedTabs = SavedTabs(tabs: [
+            SavedTab(id: UUID(), url: "http://omarchy.local:8888/", title: "Grafana", state: Data([1, 2, 3])),
+            SavedTab(id: UUID(), url: nil, title: "", state: nil)
+        ], selected: 7)
+        tabStore.save(savedTabs)
+        let loadedTabs = tabStore.load()
+        check(loadedTabs?.tabs == savedTabs.tabs, "Tabs and their history survive relaunch")
+        check(loadedTabs?.selected == 1, "Selected tab index is clamped")
+        tabStore.clear()
+        check(tabStore.load() == nil, "Clearing removes saved tabs")
+        try Data("{".utf8).write(to: tabStore.fileURL)
+        check(tabStore.load() == nil, "Damaged tab file starts fresh")
+
+        let cache = DiscoveryCache(fileURL: directory.appending(path: "discovered.json"))
+        check(cache.load() == nil, "No discovery cache before the first scan")
+        let scan = DiscoveryScan(date: Date(timeIntervalSince1970: 1_800_000_000), network: "en0|10.0.0.1", services: [nas, printerIPP])
+        cache.save(scan)
+        check(cache.load() == scan, "Last scan survives relaunch")
+        var trimmed = scan
+        trimmed.services.removeAll { $0.id == nas.id }
+        cache.save(trimmed)
+        check(cache.load()?.services == [printerIPP], "Removing one result is saved")
+        cache.clear()
+        check(cache.load() == nil, "Clear Results deletes the cache")
+        print("Passed \(count) core checks (address parsing, bookmark persistence, discovery, diagnostics, device names, and tabs).")
     }
 }

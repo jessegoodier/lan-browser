@@ -29,8 +29,20 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_http._tcp</string>
+		<string>_https._tcp</string>
+		<string>_home-assistant._tcp</string>
+		<string>_plexmediasvr._tcp</string>
+		<string>_ipp._tcp</string>
+		<string>_ipps._tcp</string>
+		<string>_octoprint._tcp</string>
+		<string>_esphomelib._tcp</string>
+		<string>_wled._tcp</string>
+	</array>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>LAN Browser connects to web apps running on devices in your local network, such as your home server.</string>
+	<string>LAN Browser connects to web apps on devices in your local network, such as your home server. If you turn on Local Network Features, it also finds web apps advertised on your network, checks whether your bookmarks are reachable, and diagnoses connection problems.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

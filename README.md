@@ -1,26 +1,51 @@
 # LAN Browser
 
-A small, single-page iPhone browser for home services and captive-portal Wi-Fi. Built with SwiftUI and WebKit; the current Xcode-recommended deployment target resolves to iOS 17.0. Intended for iPhone 17 Pro on iOS 27.0.1. The project uses the installed Xcode 27.1 and has no dependencies to install.
+A small iPhone browser with tabs for home services and captive-portal Wi-Fi. Built with SwiftUI and WebKit; requires iOS 17.0 or later. Intended for iPhone 17 Pro on iOS 27.0.1. The project uses the installed Xcode 27.1 and has no dependencies to install.
 
 Plain HTTP is the point. Home servers often have no certificate, and hotel, cafe, train, and airport networks can only show their sign-in page by intercepting an HTTP request. HTTPS sites turn that interception into a certificate warning. [HTTP Forever](http://httpforever.com/) is a public plain-HTTP page made for that captive-portal case.
 
 ## What is included
 
-- Bookmarks home screen on fresh launch, seeded with **HTTP Forever Captive Portal — http://httpforever.com/**. Use it to reach a Wi-Fi sign-in page, then add your own LAN bookmarks.
+- Bookmarks start page on fresh launch and in new tabs, seeded with **HTTP Forever Captive Portal — http://httpforever.com/**. Use it to reach a Wi-Fi sign-in page, then add your own LAN bookmarks.
 - Bottom address bar; omitted schemes default to HTTP. Explicit HTTPS and server redirects work normally.
 - Back, Forward, Reload/Stop, swipe navigation, loading state, and retryable errors.
 - Add, edit, delete, and reorder bookmarks, stored on the device.
-- Persistent website cookies and storage. No separate browsing-history database.
+- Persistent website cookies and storage. No browsing-history database, apart from the open tabs saved for Restore Tabs on Launch.
 - Downloads through WebKit followed by **Save to Files**, with a destination choice for each file. Files are temporarily staged in the app and cleaned up after export or cancellation.
 - System appearance, accessible control labels, and portrait/landscape layouts.
 
-The book button opens bookmarks; from bookmarks, the globe button returns to the current page. Swipe right on a bookmark or long-press it to edit. Swipe left to delete, or tap **Edit** to delete/reorder.
+The **Bookmarks** (book) button opens the bookmark list; while it is showing, the globe button returns to the current page. Swipe right on a bookmark or long-press it to edit; the long-press menu also has **Rename Device…**. Swipe left to delete, or tap **Edit** to delete/reorder.
+
+## Tabs
+
+Tabs work much like Safari’s. A new tab opens on the bookmark list. Tapping a bookmark or an On This Network row opens it in a new tab, or fills the current tab if that tab is blank. The default is set in **Settings › Open Bookmarks In** (New Tab or Current Tab). Long-press a bookmark for the other choice, **Open in New Tab** or **Open in Current Tab**. Links that open a new window (`target="_blank"` or `window.open`) open a new tab.
+
+The **Tabs** button opens the tab switcher: a grid of page thumbnails with ✕ to close a tab, **New Tab**, and **Done**. Long-press the Tabs button for **New Tab** and **Close Tab**. Closing the last tab leaves one blank tab.
+
+With **Restore Tabs on Launch** on (the default), open tabs are saved on the device in `tabs.json` in Application Support, with each tab’s address, title, and Back/Forward history, and restored at launch. A restored tab loads only when you switch to it. Turning the setting off deletes the file, and so does **Clear Cookies & Website Data**. Saved tabs are never sent anywhere.
+
+## Local network features
+
+Both features are optional and off until you turn on **Local Network Features**. Use the card at the top of the bookmark list (“Find devices on this network”) or the switch in **Settings**. Turning it on triggers the iOS Local Network permission prompt. While the switch is off, the app does not browse the network.
+
+- **On This Network** is a list, below your bookmarks, of web apps advertised with Bonjour (mDNS) on your network. Web apps you’ve already bookmarked are left out. A match needs the same port and the same host name or IP, so a printer saved as `10.0.0.232` doesn’t appear again as `brotherE6576F3F.local`, while a second app on another port of a bookmarked device is still listed. Tapping **+** moves an app out of this list and into your bookmarks. The app scans once automatically the first time **Local Network Features** is turned on (or the first time the bookmark list opens after updating with the feature already on). After that it scans only when you ask: **Scan Again** in the section’s ••• menu or in Settings, or pull down on the bookmark list. A scan stops on its own once results settle (about two seconds with nothing new, and at most about ten seconds). While it runs, new rows are added at the end so nothing moves under your finger; when it finishes, the list is sorted by name. The last scan is saved on the device and shown until you scan again or clear it. The section shows when it was scanned. If you have moved to a different network since, a note says so, but the app does not rescan by itself. Clear the list with **Clear Results** in the ••• menu or **Clear Discovered Services** in Settings, or swipe left on a row (or long-press it and choose **Remove from List**) to remove one row until the next scan. Each row has a status dot (green, red, or grey) from the same TCP checks used for bookmarks. Tap **+** to copy an entry into your bookmarks. It browses generic web servers (`_http._tcp`, `_https._tcp`), Home Assistant, Plex, network printers (IPP/IPPS admin pages), OctoPrint, ESPHome, and WLED.
+- **Bookmark status dots** show whether each bookmark’s host and port accept a TCP connection. Green means the connection succeeded within 3 seconds. Red means it was refused, timed out, or the name did not resolve. Grey means a check is running. With the feature off, no dots are shown. Checks run when the bookmark list appears, on pull-to-refresh, and when the network changes. There is no background polling. Checks contact only the addresses you saved, including public ones such as httpforever.com.
+- **Device names** replace the raw URL on bookmark and On This Network rows. A row shows the friendly name, then any non-default port and path, then the most recently seen IP, such as “omarchy:8888 · 10.0.2.2”. The default name is the host name without local suffixes (`.local`, `.localdomain`, `.lan`, `.home.arpa`, `.home`, `.internal`), so `omarchy.local` shows as “omarchy”. A bookmark saved by IP takes its name from a reverse DNS lookup when one answers, otherwise from the IP. Rename a device in the **Device** section at the top of Page Info (ⓘ), or long-press a bookmark or On This Network row and choose **Rename Device…**. Leaving the name empty restores the default. One name applies to every bookmark on that host. A name is tied to the host name, so it follows the device when its IP changes. Bookmarks saved by IP are keyed by that IP instead. iOS does not let apps read MAC addresses, so names cannot be tied to hardware. IPs and reverse-lookup names are learned only while **Local Network Features** is on, from discovery, bookmark status checks, and when Page Info opens. With the feature off, rows show only the name, port, and path.
+- **Tap +** on an On This Network row now saves the device’s Bonjour host name URL, such as `http://omarchy.local:8888/`, instead of its IP, so the bookmark keeps working when the router assigns a new IP. If the host name cannot be resolved, it falls back to the IP.
+
+Discovery runs only when you ask, plus one automatic scan the first time the feature is turned on. Status checks run only while the bookmark list is open and the app is in the foreground. Discovery uses local multicast only and stays on your network. Nothing from discovery, status checks, or diagnostics is sent to the developer or any third party.
+
+## Connection diagnostics
+
+**Why can’t I connect?** checks each step in order, and each failure shows plain-language advice. The steps are **Network** (Wi-Fi, cellular, or none, and the device IP), **Local Network Access** (for local addresses only), **Name Lookup** (what the name resolves to through iOS’s DNS resolver), **Port** (TCP connect, refused or timed out), and **Web Server** (a single GET over a raw connection: status code, server header, and for HTTPS whether the certificate is trusted). Later steps are skipped after a failure.
+
+Open it from the Page Info (ⓘ) sheet, the **Diagnose** button next to **Retry** on the “Page unavailable” screen, or **Check Connection** in a bookmark’s long-press menu. It runs only when you ask. It does not need the Local Network Features switch, although checking a local address may trigger the iOS permission prompt. **Copy Report** copies a text summary for support requests.
 
 ## App Store preparation
 
 See [App Store submission](APP_STORE_SUBMISSION.md) for listing copy, review instructions, HTTP exception justification, and release checks. [Support](SUPPORT.md) and the [privacy policy](LANBrowser/privacy_policy.md) provide the public support and policy pages once published to the repository.
 
-Open **Bookmarks > Help & Privacy** for the bundled offline privacy policy, GitHub support, **Clear Cookies & Website Data**, and **Run Browser Check**. The browser check renders locally and offers a sample Save to Files download without a LAN server or internet connection.
+Open **Settings** (the gear button on the bookmark screen). It has four groups: **Browsing** (**Open Bookmarks In** and **Restore Tabs on Launch**); **Local Network** (the **Local Network Features** switch, **Scan Again**, **Clear Discovered Services**, and **Reset Device Names**, which asks for confirmation and forgets custom names, remembered IPs, and looked-up host names but keeps bookmarks); **Privacy** (**Clear Cookies & Website Data** and the bundled offline **Privacy Policy**); and **Help & Support** (the **Using LAN Browser** help page, **Run Browser Check**, **Ask for Help or Report a Problem** on GitHub Issues, and the app version). The browser check renders locally and offers a sample Save to Files download without a LAN server or internet connection.
 
 ## 1. Run it on your iPhone first
 
@@ -39,7 +64,9 @@ You can subsequently launch the installed app from its Home Screen icon without 
 
 ### If a home service does not load
 
-- Try the exact address in Safari on the same iPhone. The app uses iOS’s normal DNS resolver; it does not discover machines or invent an IP address for a hostname.
+- Open **Why can’t I connect?** from the Page Info (ⓘ) sheet, the **Diagnose** button next to **Retry** on the “Page unavailable” screen, or **Check Connection** in a bookmark’s long-press menu. It reports which step fails.
+- If it reports Local Network permission denied, open **Settings › Privacy & Security › Local Network › LAN Browser** and turn it on.
+- Try the exact address in Safari on the same iPhone. The app uses iOS’s normal DNS resolver and does not invent an IP address for a hostname. **On This Network** shows the services found by your last scan on the current network; use **Scan Again** to refresh it.
 - If Safari also fails, try **http://YOUR_SERVER_LAN_IP:PORT/**. If the IP works, fix your home DNS or edit the bookmark to use the IP. A `.local` address is another option only if that machine actually advertises one.
 - Ensure the service listens on the LAN interface rather than only `127.0.0.1`, its firewall permits the port, and the phone is not on an isolated guest Wi-Fi network.
 - The ATS settings allow HTTP inside the browser. They do not repair DNS, bypass server authentication, or accept invalid HTTPS certificates.
@@ -76,7 +103,7 @@ Run the core checks from Terminal in this directory:
 Scripts/check.sh
 ```
 
-These compile the actual address parser and bookmark store for macOS and check hostname/port parsing, HTTP/HTTPS, malformed inputs, persistence, edits, ordering, deletion, corrupt files, and write failures. They also validate the property lists and Xcode project syntax. They do not launch WebKit or replace the physical-device checks.
+These compile the actual address parser and bookmark store for macOS and check hostname/port parsing, HTTP/HTTPS, malformed inputs, persistence, edits, ordering, deletion, corrupt files, and write failures. They also check Bonjour service-to-URL mapping, duplicate merging, local-address detection, HTTP response parsing, diagnostic advice and report text, device naming and labels, and that `NSBonjourServices` in Info.plist matches `ServiceCatalog.types`. They also cover saved tabs, the tab-opening rule, and the discovery cache, and validate the property lists and Xcode project syntax. They do not launch WebKit or replace the physical-device checks.
 
 Unsigned device build, useful without selecting a signing team:
 
@@ -90,17 +117,21 @@ An unsigned build cannot be installed on your iPhone or uploaded to TestFlight. 
 
 ### Physical-device acceptance checks
 
-- From Bookmarks, open **Help & Privacy**. Verify the privacy policy is readable offline and the support link opens GitHub Issues.
+- From the bookmark screen, open **Settings** (gear). Verify the privacy policy is readable offline and that **Ask for Help or Report a Problem** opens GitHub Issues.
 - Run **Browser Check** offline, save the sample file, and open it in Files.
-- Sign in to a test website, then use **Clear Cookies & Website Data**. Confirm the website session is signed out and bookmarks/exported files remain.
+- Sign in to a test website, then use **Clear Cookies & Website Data** in Settings. Confirm the website session is signed out, all tabs close except one blank tab, and bookmarks/exported files remain.
 
 - First launch shows **HTTP Forever Captive Portal** in bookmarks. Open it and confirm [http://httpforever.com/](http://httpforever.com/) loads over HTTP. On a captive network, confirm the sign-in page appears instead.
 - Add a home-service bookmark such as `192.168.1.20:8080`, open it, and verify the service loads over HTTP.
-- Navigate between pages; check Back, Forward, Reload, Stop, and swipe navigation. A new-window link should reuse the single browser page.
+- Navigate between pages; check Back, Forward, Reload, Stop, and swipe navigation. A new-window link should open in a new tab.
+- Tabs: tap a bookmark and confirm it opens in a new tab, and that opening one from a blank tab fills that tab. Create and close tabs from the Tabs switcher and from the Tabs button’s long-press menu. Set **Open Bookmarks In** to Current Tab and confirm a bookmark replaces the current page. Open a few tabs with some history, force-quit, and relaunch: the tabs return, and a restored tab loads only when you switch to it. Turn **Restore Tabs on Launch** off, relaunch, and confirm tabs are not restored.
 - Enter an HTTPS page and test a server’s HTTP-to-HTTPS redirect; the bar should reflect the resulting address.
 - Add/edit a bookmark; reorder and delete bookmarks. Force-quit and relaunch: the edited list survives and the app opens bookmarks. Deleting every bookmark should leave an empty list after relaunch.
 - Test with the keyboard visible, in landscape, in dark mode, and with larger system text.
-- Visit an unreachable address, then use Edit Address or Retry to recover.
+- Visit an unreachable address, then use Edit Address or Retry to recover. Tap **Diagnose** and confirm the failing step and advice make sense; try a closed port, a misspelled `.local` name, and a self-signed HTTPS device.
+- Turn on **Local Network Features** from the bookmark-list card. Confirm the iOS Local Network prompt appears once, **On This Network** lists devices that advertise a web page, **+** saves one as a bookmark, and status dots turn green or red. Relaunch the app: the saved scan should appear with its scan time, and no new scan should start. **Scan Again** or a pull down on the bookmark list should start one. Deny the permission in the iOS Settings app and confirm the list and diagnostics explain how to turn it back on. Turn the switch off and confirm the list and dots disappear.
+- Rename a device from Page Info (ⓘ), then rename one from a bookmark’s long-press menu with **Rename Device…**. Confirm every bookmark on that host updates. Tap **+** on a discovered device and confirm the new bookmark uses a `.local` URL.
+- To test discovery without a home server, run the fixture below and advertise it from the Mac with `dns-sd -R "LAN Fixture" _http._tcp local 8889`.
 - Download a file, choose an On My iPhone or iCloud Drive destination, and open it in Files. Download the same name twice to check the system’s conflict handling. Cancel a Save to Files picker and verify browsing still works.
 - Test a failed download, a file from a logged-in service if available, and multiple downloads. Each successful download should get its own destination picker.
 - Repeat the key checks using the TestFlight build.
@@ -115,10 +146,10 @@ Keep the Terminal running and, from the phone on the same Wi-Fi, open `http://YO
 
 ## Implementation notes
 
-The app has no analytics, advertising, cloud backend, or app-account system. Browsed websites make their own normal network requests. Bookmarks live in Application Support; website data is managed by WebKit. Download staging files live in the temporary directory and are removed after saving/cancellation or the next launch after an interrupted session.
+The app has no analytics, advertising, cloud backend, or app-account system. Browsed websites make their own normal network requests. Bookmarks live in Application Support, alongside `devices.json` (custom device names, last-seen IPs, and reverse-lookup names), `discovered.json` (the last On This Network scan), and `tabs.json` (open tabs, while Restore Tabs on Launch is on). None of it is sent to the developer or anyone else. Website data is managed by WebKit. Download staging files live in the temporary directory and are removed after saving/cancellation or the next launch after an interrupted session.
 
-`NSAllowsLocalNetworking` supports local hostnames/IPs. `NSAllowsArbitraryLoadsInWebContent` permits HTTP navigation and resources within WebKit, including redirects to other hostnames, without globally disabling ATS for unrelated app networking. Apple documents [local networking](https://developer.apple.com/documentation/bundleresources/information-property-list/nsapptransportsecurity/nsallowslocalnetworking), [web-content HTTP exceptions](https://developer.apple.com/documentation/bundleresources/information-property-list/nsapptransportsecurity/nsallowsarbitraryloadsinwebcontent), and the [WebKit exception to local-network permission](https://developer.apple.com/documentation/technotes/tn3179-understanding-local-network-privacy). There is no network scanning or native LAN probe in this app.
+`NSAllowsLocalNetworking` supports local hostnames/IPs. `NSAllowsArbitraryLoadsInWebContent` permits HTTP navigation and resources within WebKit, including redirects to other hostnames, without globally disabling ATS for unrelated app networking. Apple documents [local networking](https://developer.apple.com/documentation/bundleresources/information-property-list/nsapptransportsecurity/nsallowslocalnetworking), [web-content HTTP exceptions](https://developer.apple.com/documentation/bundleresources/information-property-list/nsapptransportsecurity/nsallowsarbitraryloadsinwebcontent), and the [WebKit exception to local-network permission](https://developer.apple.com/documentation/technotes/tn3179-understanding-local-network-privacy). Local network discovery is opt-in. With **Local Network Features** on, the app browses Bonjour services when you scan and makes TCP connections to saved bookmarks and discovered devices. Connection diagnostics make DNS, TCP, and HTTP requests to the address you check, only when you run them. Without the switch, the app does not browse the network. WebKit page loads are exempt from the iOS Local Network prompt; the native features above trigger it.
 
-The encryption declaration reflects use of Apple’s built-in HTTPS support with no custom encryption. Revisit it if custom cryptography is added. The privacy manifest declares no tracking, app-collected data, or required-reason API use in the app’s code.
+The encryption declaration reflects use of Apple’s built-in HTTPS support with no custom encryption. Revisit it if custom cryptography is added. The privacy manifest declares no tracking and no app-collected data. Its only required-reason API is UserDefaults (reason `CA92.1`), which stores the Local Network Features switch, whether its card was dismissed, and the Settings choices (Open Bookmarks In and Restore Tabs on Launch).
 
-Foreground downloads only: keep the app open while downloading. Resuming downloads after termination, background transfers, tabs, bookmark sync, network discovery, and custom certificate handling are outside this version.
+Foreground downloads only: keep the app open while downloading. Resuming downloads after termination, background transfers, bookmark sync, and custom certificate handling are outside this version.
