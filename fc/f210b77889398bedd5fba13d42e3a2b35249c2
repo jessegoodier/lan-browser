@@ -1,0 +1,39 @@
+LANBrowser/BrowserScreen.swift
+  s_aa089b7fd09b9b::t_1a542e6d9a0370 147
+  s_aa089b7fd09b9b::t_d2fa88aab82342 249
+  s_aa089b7fd09b9b::t_973e9526d279aa 336,338
+Tests/CoreChecks.swift
+  s_aa089b7fd09b9b::t_abf3af9fe170b1 26
+  s_aa089b7fd09b9b::t_6af1e6753f2232 34
+  s_aa089b7fd09b9b::t_42ad254885ada5 13-15,19-20
+README.md
+  s_aa089b7fd09b9b::t_65cddf4f907d6b 57
+  s_aa089b7fd09b9b::t_57881b4cb0cc6d 59
+  s_aa089b7fd09b9b::t_157cfb6a78ad0c 9
+  s_aa089b7fd09b9b::t_a6785e9cf7deae 87-88
+  s_aa089b7fd09b9b::t_9e2fc8d9939139 30,34,36-38,41-44
+  s_aa089b7fd09b9b::t_36cfea38b2b1c9 3-5
+  s_aa089b7fd09b9b::t_47dacffce2dbf7 45
+LANBrowser/BrowserModel.swift
+  s_aa089b7fd09b9b::t_620b7d55821fdc 235
+  s_aa089b7fd09b9b::t_dec667e46b20ae 290
+LANBrowser/Bookmarks.swift
+  s_aa089b7fd09b9b::t_86ca9897f5b172 35
+  s_aa089b7fd09b9b::t_f18865f5a7863b 15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "fcf210b77889398bedd5fba13d42e3a2b35249c2",
+  "prompts": {},
+  "sessions": {
+    "s_aa089b7fd09b9b": {
+      "agent_id": {
+        "tool": "cursor",
+        "id": "ec2e3aa9-ece2-4f0f-ab75-72d6c8b31b2a",
+        "model": "grok-4.7"
+      },
+      "human_author": "jesse goodier <31039225+jessegoodier@users.noreply.github.com>"
+    }
+  }
+}
