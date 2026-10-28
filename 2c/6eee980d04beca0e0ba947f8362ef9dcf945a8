@@ -1,0 +1,38 @@
+LANBrowser/BrowserModel.swift
+  s_d43bc8118aa8a7::t_21a4d35b86862c 246-279
+SUPPORT.md
+  s_d43bc8118aa8a7::t_13034e9d206fff 1-15
+LANBrowser/BrowserScreen.swift
+  s_d43bc8118aa8a7::t_21a4d35b86862c 34,76-81,189-191,396-466
+README.md
+  s_d43bc8118aa8a7::t_e41f5f2cab1911 3,93-95
+  s_d43bc8118aa8a7::t_13034e9d206fff 19-24
+  s_d43bc8118aa8a7::t_b4e1e708e6465c 96
+LANBrowser/privacy_policy.md
+  s_d43bc8118aa8a7::t_13034e9d206fff 1-2,4-5,7-8,10-11,13-14,16-17,19-20,22,24-25,27-29,31-32
+.gitignore
+  h_cca6aa2712613d 6
+LANBrowser.xcodeproj/project.pbxproj
+  s_d43bc8118aa8a7::t_21a4d35b86862c 10,21,61,130
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2c6eee980d04beca0e0ba947f8362ef9dcf945a8",
+  "prompts": {},
+  "humans": {
+    "h_cca6aa2712613d": {
+      "author": "jesse goodier <31039225+jessegoodier@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_d43bc8118aa8a7": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1802f-c90f-7fe0-8cba-114c499ebe2b",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "jesse goodier <31039225+jessegoodier@users.noreply.github.com>"
+    }
+  }
+}
