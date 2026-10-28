@@ -1,0 +1,169 @@
+LANBrowser/privacy_policy.md
+  s_df282fcf9ae99d::t_fcbe0690f3304c 20
+  s_df282fcf9ae99d::t_68d696fc20c7d6 2
+  s_df282fcf9ae99d::t_9caeefc8045089 11
+  s_df282fcf9ae99d::t_91c7625f363774 13-14
+  s_df282fcf9ae99d::t_27bf72987c31c5 12
+SUPPORT.md
+  s_df282fcf9ae99d::t_1a34c6b5c9dc0b 14-15
+  s_df282fcf9ae99d::t_bd57c7a98e640c 5
+  s_df282fcf9ae99d::t_f98d15c9bfb7d2 13
+  s_df282fcf9ae99d::t_d354b942fd8ca0 16
+  s_df282fcf9ae99d::t_f470c968df1a1b 17
+LANBrowser/LocalNetwork.swift
+  s_df282fcf9ae99d::t_830bf0540058b8 1-10,13-18,20-26,28,34-36,38,42,44-46,50,53-56,60,63,65-66,72-73,75-78,85-86,92-97,99-101,103,106,112-113,140,144,146-147,149,153,162-167,173-177,189-193,200-214,219-220,222-223,234-239,242-245,247-250,253-258,260-262,264-266,268,272,274-277,280,309-310,323-353,368-369,371-375,377,398-399,402-403,406-407,411-415
+  s_df282fcf9ae99d::t_b78a0675a049e7 37,58-59,70,80,114-119,142
+  s_df282fcf9ae99d::t_897b928b4e4321 41,57,62,240-241,246,251-252,267,270-271,311-322,380,391,401,404
+  s_df282fcf9ae99d::t_4cbd03d7f40b65 273
+  s_df282fcf9ae99d::t_e80864d4299673 168-171
+  s_df282fcf9ae99d::t_a62fbc4605041a 30,39-40,47-49,215,217-218,224-225,230,263,278,281-287,289-298,300,308
+  s_df282fcf9ae99d::t_03a9bbbfc4df7e 11-12,19,27,29,31-33,43,51-52,61,64,67-69,71,74,79,81-84,87-91,98,102,104-105,107-111,120-139,141,143,145,148,150-152,154-161,172,178-188,194-199,216,221,226-229,231-233,259,269,279,288,299,301-307,354-367,370,376,378-379,381-390,392-397,400,405,408-410
+LANBrowser/NetworkProbe.swift
+  s_df282fcf9ae99d::t_bd241478c436ad 1-50,54-68,70-122,188-228,251-306
+  s_df282fcf9ae99d::t_6ceafd78ccd1f4 51-53
+  s_df282fcf9ae99d::t_897b928b4e4321 123-135
+  s_df282fcf9ae99d::t_9f98fe70525d64 136-187
+  s_df282fcf9ae99d::t_4d73e6b5289dcd 229-250
+  s_df282fcf9ae99d::t_1341acd5125c0f 69
+Tests/CoreChecks.swift
+  s_df282fcf9ae99d::t_af0088e40941fc 141-171
+  s_df282fcf9ae99d::t_d4f7251da5f9c2 116-140
+  s_df282fcf9ae99d::t_752922bec3747a 85-94
+  s_df282fcf9ae99d::t_9c0f0424d26391 84
+  s_df282fcf9ae99d::t_2914bf6dfa83a0 59-83,95-115
+AGENTS.md
+  s_df282fcf9ae99d::t_1c911594592785 7
+  s_df282fcf9ae99d::t_3b3271c31ae7e9 16-20
+  s_df282fcf9ae99d::t_f5a3629aaf0232 1-6,8-15,21,23-26,29-30,32-55,57-65,68,70-75,77-79
+  s_df282fcf9ae99d::t_949f09dffdcc38 69
+  s_df282fcf9ae99d::t_37a571d5ad1fdc 31
+  s_df282fcf9ae99d::t_1f1235a844de3b 22
+  s_df282fcf9ae99d::t_e17aa4b06779e5 76
+  s_df282fcf9ae99d::t_3efff5c15e895b 27-28
+  s_df282fcf9ae99d::t_996b163fb55d12 56
+  s_df282fcf9ae99d::t_bca30d3cb20abf 66-67
+README.md
+  s_df282fcf9ae99d::t_af2aedf06e6f93 19-26
+  s_df282fcf9ae99d::t_ac8bce610aa290 131,134
+  s_df282fcf9ae99d::t_72481ff3f5dc55 13
+  s_df282fcf9ae99d::t_6af3c7cbf2f6d8 29
+  s_df282fcf9ae99d::t_a83968805b1b69 27-28,30,35,37-39,41-42
+  s_df282fcf9ae99d::t_b3733533437ed5 48
+  s_df282fcf9ae99d::t_955939ecc89934 120
+  s_df282fcf9ae99d::t_7bbe0fc96172bf 153
+  s_df282fcf9ae99d::t_544c4523e822c0 151
+  s_df282fcf9ae99d::t_fa321006e07c54 9
+  s_df282fcf9ae99d::t_166bbd0b4c786d 32
+  s_df282fcf9ae99d::t_2f750321172918 132
+  s_df282fcf9ae99d::t_b5d5c7a7a28ed6 36
+  s_df282fcf9ae99d::t_268cb425528087 106
+  s_df282fcf9ae99d::t_19db2b5e9ff453 133
+  s_df282fcf9ae99d::t_0236af5318c149 122
+  s_df282fcf9ae99d::t_f6d82864216a49 149
+  s_df282fcf9ae99d::t_5e6763aa919011 3
+  s_df282fcf9ae99d::t_d05703b9dfe161 69
+  s_df282fcf9ae99d::t_6eb6f220eb53ff 126-127
+  s_df282fcf9ae99d::t_929ca2204e097b 155
+  s_df282fcf9ae99d::t_00d0e7fd1da49b 17
+  s_df282fcf9ae99d::t_7335368a0506d5 33-34
+  s_df282fcf9ae99d::t_752922bec3747a 31
+  s_df282fcf9ae99d::t_fb070650c242cd 40
+  s_df282fcf9ae99d::t_e9359de63027c1 67-68
+  s_df282fcf9ae99d::t_b971e74895e73d 18
+LANBrowser/DeviceNames.swift
+  s_df282fcf9ae99d::t_4abb78d08b561d 1-27,29-33,35-41,43-84,91-116
+  s_df282fcf9ae99d::t_7f6ccddb73dead 85-90
+  s_df282fcf9ae99d::t_6b1217f5578564 28,34,42
+LANBrowser/DiscoveryCache.swift
+  s_df282fcf9ae99d::t_9af704b0514573 1-38
+LANBrowser/SettingsView.swift
+  s_df282fcf9ae99d::t_841383470ea9a2 1-107
+  s_df282fcf9ae99d::t_f58acb8a2121f9 108-127
+LANBrowser/DiagnosticsLogic.swift
+  s_df282fcf9ae99d::t_768589cc0fff0a 3
+  s_df282fcf9ae99d::t_20c71de0f03990 1-2,4-132
+Tests/serve_fixture.py
+  s_df282fcf9ae99d::t_1c10cfb62c1aa2 10
+LANBrowser/BrowserModel.swift
+  s_df282fcf9ae99d::t_28ecdb772dee31 143,145-147,151,157-158,160-161,167-176,179-185,188-218,221-237,239-240,243-245,250,254-258,261-268,271-275,277-289,292-293,307,323
+LANBrowser.xcodeproj/project.pbxproj
+  s_df282fcf9ae99d::t_76b7a48f76660c 25-29,50-54,89-93,187-191
+  s_df282fcf9ae99d::t_7c475885d1518f 18-23,43-48,82-87,180-185,208,228,251,280
+  s_df282fcf9ae99d::t_0cdb9fcaf653e1 24,49,88,186
+LANBrowser/BrowserScreen.swift
+  s_df282fcf9ae99d::t_6bee9fa0a4d3e6 250-252,255,258-260,265
+  s_df282fcf9ae99d::t_893fce3007dbf0 165,167
+  s_df282fcf9ae99d::t_9e630108596c72 374
+  s_df282fcf9ae99d::t_87ab8e6732ffb8 31-32,35,44-49
+  s_df282fcf9ae99d::t_5bf3276995092b 379-383
+  s_df282fcf9ae99d::t_ebfd29166acdfd 197-200
+  s_df282fcf9ae99d::t_6a617365d6ac5e 124-137
+  s_df282fcf9ae99d::t_4edaba4e3d0e5f 263
+  s_df282fcf9ae99d::t_9dd396747e4154 249,481-491
+  s_df282fcf9ae99d::t_752922bec3747a 173-177,254
+  s_df282fcf9ae99d::t_b8621fcdc3e06d 178-180
+  s_df282fcf9ae99d::t_4840b9c73009eb 356-360,362-365
+  s_df282fcf9ae99d::t_890eb425999761 95-96,101
+  s_df282fcf9ae99d::t_d0d7a7465bba0b 447-458
+  s_df282fcf9ae99d::t_97d3c77069e23b 500-511
+  s_df282fcf9ae99d::t_fc3ccb88b93e64 73-74
+  s_df282fcf9ae99d::t_a065aa46d3b222 159-160
+  s_df282fcf9ae99d::t_089be932e9326e 428,465
+  s_df282fcf9ae99d::t_ea41655e8ea583 191-195,210-212
+  s_df282fcf9ae99d::t_2876b98d734a70 187,354,425-427,430-436
+  s_df282fcf9ae99d::t_1994c364203f9a 17,23,33
+  s_df282fcf9ae99d::t_9012942adbb36f 29,34,41-43,50-51,58-63,65,71-72,84,87,91-94,97-99,105-108,111-123,142-143,164,169,181-186,203,231,248,253,256-257,272-273,279,282,291,294,297,304-307,310,313-314,316,318-325,327-339,345-346,351-353,361,367,375
+  s_df282fcf9ae99d::t_63bcd646ef0401 235-238,242
+  s_df282fcf9ae99d::t_a36dd8a20df223 215-216
+  s_df282fcf9ae99d::t_9921a96fb913d8 239-241
+  s_df282fcf9ae99d::t_cbe2055ffa1aca 188,355
+LANBrowser/Info.plist
+  s_df282fcf9ae99d::t_d835aa5bc596fd 32-43,45
+LANBrowser/BrowserTab.swift
+  s_df282fcf9ae99d::t_66b56862b43a63 1-279
+LANBrowser/ConnectionDiagnostics.swift
+  s_df282fcf9ae99d::t_25e115de8f27b9 1-115
+Scripts/check.sh
+  s_df282fcf9ae99d::t_d835aa5bc596fd 7,10
+  s_df282fcf9ae99d::t_2a585ae22d1d5a 8
+LANBrowser/ServiceCatalog.swift
+  s_df282fcf9ae99d::t_2518811aaa5ffb 1-2,5-7,10-50,71-74,76-99
+  s_df282fcf9ae99d::t_a62fbc4605041a 51-52,54-55,75
+  s_df282fcf9ae99d::t_752922bec3747a 53,56-68
+  s_df282fcf9ae99d::t_b8621fcdc3e06d 69-70
+  s_df282fcf9ae99d::t_2a585ae22d1d5a 3-4
+  s_df282fcf9ae99d::t_897b928b4e4321 8-9
+LANBrowser/NetworkViews.swift
+  s_df282fcf9ae99d::t_0cdb9fcaf653e1 31,36,66
+  s_df282fcf9ae99d::t_b8621fcdc3e06d 40,42,68-69,90,117,119-120
+  s_df282fcf9ae99d::t_849aa636077352 1-27,32,35,37-39,44-46,49-52,62,64,78-83,85,95-97,129-248
+  s_df282fcf9ae99d::t_752922bec3747a 29-30,41,98
+  s_df282fcf9ae99d::t_194b1e5920bdc6 28,33-34,43,47-48,53-61,63,65,67,70-77,84,86-89,91-94,99-116,118,121-128
+LANBrowser/PrivacyInfo.xcprivacy
+  s_df282fcf9ae99d::t_d835aa5bc596fd 7-12
+LANBrowser/TabStore.swift
+  s_df282fcf9ae99d::t_4934891d86580e 1-60
+LANBrowser/TabViews.swift
+  s_df282fcf9ae99d::t_5a0f86d7469b10 1-99
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e74c0b6c54a2319f27d5a75a3696f7a4cbae1865",
+  "prompts": {},
+  "humans": {
+    "h_cca6aa2712613d": {
+      "author": "jesse goodier <31039225+jessegoodier@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_df282fcf9ae99d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7f724492-7d77-4b2c-815a-d87a3916d5b4",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "jesse goodier <31039225+jessegoodier@users.noreply.github.com>"
+    }
+  }
+}
