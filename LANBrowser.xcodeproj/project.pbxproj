@@ -15,6 +15,20 @@
 		0000000000000000000000CD /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000069 /* Assets.xcassets */; };
 		0000000000000000000000CF /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000006B /* PrivacyInfo.xcprivacy */; };
 		0000000000000000000000D0 /* privacy_policy.md in Resources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000006C /* privacy_policy.md */; };
+		0000000000000000000000D1 /* ServiceCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000006D /* ServiceCatalog.swift */; };
+		0000000000000000000000D2 /* DiagnosticsLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000006E /* DiagnosticsLogic.swift */; };
+		0000000000000000000000D3 /* NetworkProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000006F /* NetworkProbe.swift */; };
+		0000000000000000000000D4 /* LocalNetwork.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000070 /* LocalNetwork.swift */; };
+		0000000000000000000000D5 /* ConnectionDiagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000071 /* ConnectionDiagnostics.swift */; };
+		0000000000000000000000D6 /* NetworkViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000072 /* NetworkViews.swift */; };
+		0000000000000000000000D7 /* DeviceNames.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000073 /* DeviceNames.swift */; };
+		0000000000000000000000D8 /* BrowserTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000074 /* BrowserTab.swift */; };
+		0000000000000000000000D9 /* TabStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000075 /* TabStore.swift */; };
+		0000000000000000000000DA /* TabViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000076 /* TabViews.swift */; };
+		0000000000000000000000DB /* DiscoveryCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000077 /* DiscoveryCache.swift */; };
+		0000000000000000000000DC /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000078 /* SettingsView.swift */; };
+		0000000000000000000000DD /* PortScan.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000079 /* PortScan.swift */; };
+		0000000000000000000000DE /* Certificates.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000007A /* Certificates.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +42,20 @@
 		00000000000000000000006A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		00000000000000000000006B /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		00000000000000000000006C /* privacy_policy.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = privacy_policy.md; sourceTree = "<group>"; };
+		00000000000000000000006D /* ServiceCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceCatalog.swift; sourceTree = "<group>"; };
+		00000000000000000000006E /* DiagnosticsLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiagnosticsLogic.swift; sourceTree = "<group>"; };
+		00000000000000000000006F /* NetworkProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkProbe.swift; sourceTree = "<group>"; };
+		000000000000000000000070 /* LocalNetwork.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalNetwork.swift; sourceTree = "<group>"; };
+		000000000000000000000071 /* ConnectionDiagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionDiagnostics.swift; sourceTree = "<group>"; };
+		000000000000000000000072 /* NetworkViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkViews.swift; sourceTree = "<group>"; };
+		000000000000000000000073 /* DeviceNames.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceNames.swift; sourceTree = "<group>"; };
+		000000000000000000000074 /* BrowserTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserTab.swift; sourceTree = "<group>"; };
+		000000000000000000000075 /* TabStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabStore.swift; sourceTree = "<group>"; };
+		000000000000000000000076 /* TabViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabViews.swift; sourceTree = "<group>"; };
+		000000000000000000000077 /* DiscoveryCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoveryCache.swift; sourceTree = "<group>"; };
+		000000000000000000000078 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		000000000000000000000079 /* PortScan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortScan.swift; sourceTree = "<group>"; };
+		00000000000000000000007A /* Certificates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Certificates.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -55,6 +83,20 @@
 				000000000000000000000066 /* BrowserModel.swift */,
 				000000000000000000000067 /* BrowserScreen.swift */,
 				000000000000000000000068 /* LANBrowserApp.swift */,
+				00000000000000000000006D /* ServiceCatalog.swift */,
+				00000000000000000000006E /* DiagnosticsLogic.swift */,
+				00000000000000000000006F /* NetworkProbe.swift */,
+				000000000000000000000070 /* LocalNetwork.swift */,
+				000000000000000000000071 /* ConnectionDiagnostics.swift */,
+				000000000000000000000072 /* NetworkViews.swift */,
+				000000000000000000000073 /* DeviceNames.swift */,
+				000000000000000000000074 /* BrowserTab.swift */,
+				000000000000000000000075 /* TabStore.swift */,
+				000000000000000000000076 /* TabViews.swift */,
+				000000000000000000000077 /* DiscoveryCache.swift */,
+				000000000000000000000078 /* SettingsView.swift */,
+				000000000000000000000079 /* PortScan.swift */,
+				00000000000000000000007A /* Certificates.swift */,
 				000000000000000000000069 /* Assets.xcassets */,
 				00000000000000000000006A /* Info.plist */,
 				00000000000000000000006B /* PrivacyInfo.xcprivacy */,
@@ -141,6 +183,20 @@
 				0000000000000000000000CA /* BrowserModel.swift in Sources */,
 				0000000000000000000000CB /* BrowserScreen.swift in Sources */,
 				0000000000000000000000CC /* LANBrowserApp.swift in Sources */,
+				0000000000000000000000D1 /* ServiceCatalog.swift in Sources */,
+				0000000000000000000000D2 /* DiagnosticsLogic.swift in Sources */,
+				0000000000000000000000D3 /* NetworkProbe.swift in Sources */,
+				0000000000000000000000D4 /* LocalNetwork.swift in Sources */,
+				0000000000000000000000D5 /* ConnectionDiagnostics.swift in Sources */,
+				0000000000000000000000D6 /* NetworkViews.swift in Sources */,
+				0000000000000000000000D7 /* DeviceNames.swift in Sources */,
+				0000000000000000000000D8 /* BrowserTab.swift in Sources */,
+				0000000000000000000000D9 /* TabStore.swift in Sources */,
+				0000000000000000000000DA /* TabViews.swift in Sources */,
+				0000000000000000000000DB /* DiscoveryCache.swift in Sources */,
+				0000000000000000000000DC /* SettingsView.swift in Sources */,
+				0000000000000000000000DD /* PortScan.swift in Sources */,
+				0000000000000000000000DE /* Certificates.swift in Sources */,
 			);
 		};
 /* End PBXSourcesBuildPhase section */
@@ -157,7 +213,7 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
@@ -177,7 +233,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
-				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
@@ -200,7 +256,7 @@
 				INFOPLIST_FILE = LANBrowser/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = LANBrowser;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
-				IPHONEOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_IPHONEOS_DEPLOYMENT_TARGET)";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -229,7 +285,7 @@
 				INFOPLIST_FILE = LANBrowser/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = LANBrowser;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
-				IPHONEOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_IPHONEOS_DEPLOYMENT_TARGET)";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

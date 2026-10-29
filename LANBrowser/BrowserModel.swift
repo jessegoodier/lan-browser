@@ -138,156 +138,160 @@ struct PageInfo {
     let certificateSubject: String?
     let certificateIssuer: String?
     let certificateTrusted: Bool?
+    let response: PageResponse?
+    let certificateIssue: CertificateIssue?
 }
 
+/// App-level browser state: the open tabs, downloads and the export queue.
 @MainActor
-final class BrowserModel: NSObject, ObservableObject {
-    let webView: WKWebView
-    @Published var showingBookmarks = true
-    @Published private(set) var address = ""
-    @Published private(set) var title = ""
-    @Published private(set) var canGoBack = false
-    @Published private(set) var canGoForward = false
-    @Published private(set) var isLoading = false
-    @Published private(set) var progress = 0.0
-    @Published private(set) var pageError: String?
+final class BrowserSession: NSObject, ObservableObject {
+    @Published private(set) var tabs: [BrowserTab] = []
+    @Published private(set) var selectedID = UUID()
     @Published var message: String?
     @Published private(set) var activeDownloadCount = 0
     @Published var export: DownloadExport?
-    private var observations: [NSKeyValueObservation] = []
+    private var tabChanges: [UUID: AnyCancellable] = [:]
     private var downloads: [ObjectIdentifier: WKDownload] = [:]
     private var destinations: [ObjectIdentifier: URL] = [:]
     private var pendingExports: [DownloadExport] = []
     private var exportingURL: URL?
-    private var requestedURL: URL?
     private let downloadDirectory: URL
+    private let tabStore: TabStore
+    private var saveTask: Task<Void, Never>?
 
-    override init() {
-        let configuration = WKWebViewConfiguration()
-        configuration.websiteDataStore = .default()
-        #if DEBUG
-        PageDiagnostics.install(in: configuration.userContentController)
-        #endif
-        webView = WKWebView(frame: .zero, configuration: configuration)
+    init(tabStore: TabStore = TabStore()) {
+        self.tabStore = tabStore
         downloadDirectory = FileManager.default.temporaryDirectory.appending(path: "LANBrowserDownloads", directoryHint: .isDirectory)
         super.init()
         // Downloads are foreground-only. Remove leftovers from a previous terminated session.
         try? FileManager.default.removeItem(at: downloadDirectory)
         try? FileManager.default.createDirectory(at: downloadDirectory, withIntermediateDirectories: true)
-        webView.navigationDelegate = self
-        webView.uiDelegate = self
-        webView.allowsBackForwardNavigationGestures = true
-        webView.isInspectable = false
-        observations = [
-            webView.observe(\.url, options: [.new]) { [weak self] _, _ in self?.scheduleSync() },
-            webView.observe(\.title, options: [.new]) { [weak self] _, _ in self?.scheduleSync() },
-            webView.observe(\.isLoading, options: [.new]) { [weak self] _, _ in self?.scheduleSync() },
-            webView.observe(\.estimatedProgress, options: [.new]) { [weak self] _, _ in self?.scheduleSync() },
-            webView.observe(\.canGoBack, options: [.new]) { [weak self] _, _ in self?.scheduleSync() },
-            webView.observe(\.canGoForward, options: [.new]) { [weak self] _, _ in self?.scheduleSync() }
-        ]
-    }
-
-    nonisolated private func scheduleSync() {
-        Task { @MainActor [weak self] in self?.synchronize() }
-    }
-
-    private func synchronize() {
-        let displayedURL = pageError == nil ? (webView.url ?? requestedURL) : (requestedURL ?? webView.url)
-        address = displayedURL?.absoluteString ?? ""
-        title = webView.title ?? ""
-        canGoBack = webView.canGoBack
-        canGoForward = webView.canGoForward
-        isLoading = webView.isLoading
-        progress = webView.estimatedProgress
-    }
-
-    /// Details about the page currently shown, read on demand when the info sheet opens.
-    func pageInfo() -> PageInfo {
-        let url = webView.url ?? requestedURL
-        let isHTTPS = url?.scheme?.lowercased() == "https"
-        var subject: String?
-        var issuer: String?
-        var trusted: Bool?
-        if isHTTPS, let trust = webView.serverTrust {
-            trusted = SecTrustEvaluateWithError(trust, nil)
-            let chain = (SecTrustCopyCertificateChain(trust) as? [SecCertificate]) ?? []
-            subject = chain.first.flatMap { SecCertificateCopySubjectSummary($0) as String? }
-            // The issuer is the next certificate in the chain; a self-signed leaf is its own issuer.
-            issuer = (chain.dropFirst().first ?? chain.first).flatMap { SecCertificateCopySubjectSummary($0) as String? }
+        if Self.restoresTabs, let saved = tabStore.load() {
+            tabs = saved.tabs.map { BrowserTab(session: self, restoring: $0) }
+            selectedID = tabs[saved.selected].id
+        } else {
+            tabStore.clear()
+            let tab = BrowserTab(session: self)
+            tabs = [tab]
+            selectedID = tab.id
         }
-        return PageInfo(
-            url: address,
-            title: title,
-            scheme: url?.scheme?.uppercased() ?? "",
-            host: url?.host ?? "",
-            port: url?.port,
-            isEncrypted: isHTTPS,
-            isFullySecure: isHTTPS && webView.hasOnlySecureContent,
-            certificateSubject: subject,
-            certificateIssuer: issuer,
-            certificateTrusted: trusted
-        )
+        tabs.forEach(observe)
     }
 
-    func navigate(_ input: String) -> Bool {
+    static func makeWebViewConfiguration() -> WKWebViewConfiguration {
+        let configuration = WKWebViewConfiguration()
+        configuration.websiteDataStore = .default()
+        #if DEBUG
+        PageDiagnostics.install(in: configuration.userContentController)
+        #endif
+        return configuration
+    }
+
+    static var restoresTabs: Bool { UserDefaults.standard.object(forKey: TabPolicy.restoreKey) as? Bool ?? true }
+
+    var selectedTab: BrowserTab { tabs.first { $0.id == selectedID } ?? tabs[0] }
+
+    // MARK: Tabs
+
+    /// Re-publishes tab changes so views observing the session redraw for the selected tab.
+    private func observe(_ tab: BrowserTab) {
+        tabChanges[tab.id] = tab.objectWillChange.sink { [weak self] _ in
+            MainActor.assumeIsolated { self?.objectWillChange.send() }
+        }
+    }
+
+    private func insert(_ tab: BrowserTab) {
+        let index = tabs.firstIndex { $0.id == selectedID }.map { $0 + 1 } ?? tabs.endIndex
+        tabs.insert(tab, at: index)
+        observe(tab)
+        select(tab)
+    }
+
+    @discardableResult
+    func newTab() -> BrowserTab {
+        let tab = BrowserTab(session: self)
+        insert(tab)
+        return tab
+    }
+
+    func openWindow(configuration: WKWebViewConfiguration) -> BrowserTab {
+        let tab = BrowserTab(session: self, configuration: configuration)
+        insert(tab)
+        return tab
+    }
+
+    func select(_ tab: BrowserTab) {
+        guard tab.id != selectedID else { return }
+        let previous = selectedTab
+        Task { await previous.captureSnapshot() }
+        selectedID = tab.id
+        tabsChanged()
+    }
+
+    func close(_ tab: BrowserTab) {
+        guard let index = tabs.firstIndex(where: { $0.id == tab.id }) else { return }
+        tab.close()
+        tabs.remove(at: index)
+        tabChanges[tab.id] = nil
+        if tabs.isEmpty {
+            let blank = BrowserTab(session: self)
+            tabs = [blank]
+            observe(blank)
+        }
+        if tab.id == selectedID { selectedID = tabs[min(index, tabs.count - 1)].id }
+        tabsChanged()
+    }
+
+    /// Opens an address in a new tab or the current one, after checking it is a web address.
+    @discardableResult
+    func open(_ input: String, newTab: Bool) -> Bool {
         guard let url = BrowserAddress.parse(input) else {
             message = "Enter a web address such as httpforever.com or http://192.168.1.20:8080/."
             return false
         }
-        requestedURL = url
-        address = url.absoluteString
-        pageError = nil
-        showingBookmarks = false
-        webView.load(URLRequest(url: url))
+        (newTab ? self.newTab() : selectedTab).navigate(to: url)
         return true
     }
 
-    func openBrowserCheck() {
-        requestedURL = URL(string: "about:blank")
-        address = "about:blank"
-        pageError = nil
-        showingBookmarks = false
-        webView.loadHTMLString("""
-        <!doctype html><html lang="en"><head>
-        <meta name="viewport" content="width=device-width,initial-scale=1">
-        <title>Browser Check</title>
-        <style>body{font:18px system-ui;padding:24px;line-height:1.5;color-scheme:light dark}a,button{font:inherit}li{margin:20px 0}</style>
-        </head><body><h1>Browser Check</h1>
-        <p>If you can read this page, page rendering works. This check is built into LAN Browser and does not contact a server.</p>
-        <ul><li><button onclick="const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['LAN Browser download works.\\n'],{type:'application/octet-stream'}));a.download='lan-browser-check.txt';document.body.appendChild(a);a.click();a.remove();">Save a sample file</button></li>
-        <li><a href="http://httpforever.com/">Open HTTP Forever (internet or captive Wi-Fi required)</a></li>
-        <li><a href="https://example.com/">Open an HTTPS page (internet required)</a></li></ul>
-        <p>Save the sample file to Files, then open it to check its contents. Keep LAN Browser open until the save finishes.</p>
-        <p>This local check does not test Wi-Fi portal interception or connectivity to your home server.</p>
-        </body></html>
-        """, baseURL: nil)
+    /// Bookmarks follow the Open Bookmarks In setting, but always fill a blank tab.
+    @discardableResult
+    func openBookmark(_ input: String) -> Bool {
+        let preference = OpenBookmarksIn(rawValue: UserDefaults.standard.string(forKey: OpenBookmarksIn.defaultsKey) ?? "") ?? .newTab
+        return open(input, newTab: TabPolicy.opensNewTab(currentTabIsBlank: selectedTab.isBlank, preference: preference))
+    }
+
+    /// Saves open tabs shortly after a change, so a burst of navigations writes once.
+    func tabsChanged() {
+        saveTask?.cancel()
+        saveTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(1))
+            guard !Task.isCancelled else { return }
+            self?.saveTabs()
+        }
+    }
+
+    func saveTabs() {
+        saveTask?.cancel()
+        guard Self.restoresTabs else { tabStore.clear(); return }
+        let index = tabs.firstIndex { $0.id == selectedID } ?? 0
+        tabStore.save(SavedTabs(tabs: tabs.map { $0.saved() }, selected: index))
     }
 
     func clearWebsiteData() async {
-        webView.stopLoading()
-        // Unload the current page so it cannot immediately recreate cookies or storage.
-        requestedURL = nil
-        address = ""
-        title = ""
-        pageError = nil
-        showingBookmarks = true
-        webView.loadHTMLString("", baseURL: nil)
-        await webView.configuration.websiteDataStore.removeData(
+        // Close every tab so open pages cannot immediately recreate cookies or storage.
+        tabs.forEach { $0.close() }
+        tabChanges.removeAll()
+        let blank = BrowserTab(session: self)
+        tabs = [blank]
+        observe(blank)
+        selectedID = blank.id
+        saveTask?.cancel()
+        tabStore.clear()
+        await WKWebsiteDataStore.default().removeData(
             ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(), modifiedSince: .distantPast)
     }
 
-    func back() { pageError = nil; webView.goBack() }
-    func forward() { pageError = nil; webView.goForward() }
-    func reloadOrStop() {
-        if webView.isLoading { webView.stopLoading() }
-        else if pageError != nil { retry() }
-        else { webView.reload() }
-    }
-    func retry() {
-        pageError = nil
-        if let url = requestedURL ?? webView.url { webView.load(URLRequest(url: url)) }
-    }
+    // MARK: Downloads
 
     func finishExport() {
         if let exportingURL { try? FileManager.default.removeItem(at: exportingURL.deletingLastPathComponent()) }
@@ -302,7 +306,7 @@ final class BrowserModel: NSObject, ObservableObject {
         export = next
     }
 
-    private func attach(_ download: WKDownload) {
+    func attach(_ download: WKDownload) {
         downloads[ObjectIdentifier(download)] = download
         activeDownloadCount = downloads.count
         download.delegate = self
@@ -316,101 +320,9 @@ final class BrowserModel: NSObject, ObservableObject {
         }
         activeDownloadCount = downloads.count
     }
-
-    private func failed(_ error: Error) {
-        let nsError = error as NSError
-        guard nsError.code != NSURLErrorCancelled,
-              !(nsError.domain == "WebKitErrorDomain" && nsError.code == 102) else { return }
-        pageError = "Couldn’t load this page. On a home network, check the address and port. On public Wi-Fi, open HTTP Forever so the captive portal can show its sign-in page.\n\n\(error.localizedDescription)"
-        synchronize()
-    }
 }
 
-extension BrowserModel: WKNavigationDelegate {
-    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction,
-                 decisionHandler: @escaping @MainActor @Sendable (WKNavigationActionPolicy) -> Void) {
-        guard let url = navigationAction.request.url else { decisionHandler(.cancel); return }
-        let scheme = url.scheme?.lowercased() ?? ""
-        guard ["http", "https", "about", "blob", "data"].contains(scheme) else {
-            decisionHandler(.cancel)
-            message = "LAN Browser opens HTTP and HTTPS pages. This link uses an unsupported address type."
-            return
-        }
-        if navigationAction.targetFrame?.isMainFrame == true, ["http", "https"].contains(scheme) {
-            requestedURL = url
-        }
-        decisionHandler(navigationAction.shouldPerformDownload ? .download : .allow)
-    }
-
-    func webView(_ webView: WKWebView, decidePolicyFor navigationResponse: WKNavigationResponse,
-                 decisionHandler: @escaping @MainActor @Sendable (WKNavigationResponsePolicy) -> Void) {
-        let disposition = (navigationResponse.response as? HTTPURLResponse)?.value(forHTTPHeaderField: "Content-Disposition") ?? ""
-        decisionHandler(!navigationResponse.canShowMIMEType || disposition.lowercased().hasPrefix("attachment") ? .download : .allow)
-    }
-
-    func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
-        pageError = nil
-        synchronize()
-    }
-    func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
-        requestedURL = webView.url
-        synchronize()
-    }
-    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        requestedURL = webView.url
-        synchronize()
-    }
-    func webView(_ webView: WKWebView, didReceiveServerRedirectForProvisionalNavigation navigation: WKNavigation!) {
-        requestedURL = webView.url ?? requestedURL
-        synchronize()
-    }
-    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) { failed(error) }
-    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) { failed(error) }
-    func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
-        pageError = "The page stopped responding. Tap Retry to reload it."
-    }
-    func webView(_ webView: WKWebView, navigationAction: WKNavigationAction, didBecome download: WKDownload) { attach(download) }
-    func webView(_ webView: WKWebView, navigationResponse: WKNavigationResponse, didBecome download: WKDownload) { attach(download) }
-}
-
-extension BrowserModel: WKUIDelegate {
-    func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration,
-                 for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
-        if navigationAction.targetFrame == nil { webView.load(navigationAction.request) }
-        return nil
-    }
-
-    private func present(_ alert: UIAlertController, fallback: () -> Void) {
-        guard var presenter = webView.window?.rootViewController else { fallback(); return }
-        while let presented = presenter.presentedViewController { presenter = presented }
-        guard !(presenter is UIAlertController) else { fallback(); return }
-        presenter.present(alert, animated: true)
-    }
-
-    func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String,
-                 initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping @MainActor @Sendable () -> Void) {
-        let alert = UIAlertController(title: webView.url?.host, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in completionHandler() })
-        present(alert) { completionHandler() }
-    }
-    func webView(_ webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String,
-                 initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping @MainActor @Sendable (Bool) -> Void) {
-        let alert = UIAlertController(title: webView.url?.host, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in completionHandler(false) })
-        alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in completionHandler(true) })
-        present(alert) { completionHandler(false) }
-    }
-    func webView(_ webView: WKWebView, runJavaScriptTextInputPanelWithPrompt prompt: String, defaultText: String?,
-                 initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping @MainActor @Sendable (String?) -> Void) {
-        let alert = UIAlertController(title: webView.url?.host, message: prompt, preferredStyle: .alert)
-        alert.addTextField { $0.text = defaultText }
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in completionHandler(nil) })
-        alert.addAction(UIAlertAction(title: "OK", style: .default) { [weak alert] _ in completionHandler(alert?.textFields?.first?.text) })
-        present(alert) { completionHandler(nil) }
-    }
-}
-
-extension BrowserModel: WKDownloadDelegate {
+extension BrowserSession: WKDownloadDelegate {
     func download(_ download: WKDownload, decideDestinationUsing response: URLResponse, suggestedFilename: String,
                   completionHandler: @escaping @MainActor @Sendable (URL?) -> Void) {
         let directory = downloadDirectory.appending(path: UUID().uuidString, directoryHint: .isDirectory)

@@ -7,7 +7,7 @@ PAGE = b'''<!doctype html><meta name="viewport" content="width=device-width,init
 <title>LAN Browser checks</title><style>body{font:18px system-ui;padding:20px}li{margin:20px 0}button{font:inherit}</style>
 <h1>LAN Browser checks</h1><ul>
 <li><a href="/next">Navigation page</a></li>
-<li><a href="/next" target="_blank">New window (same browser page)</a></li>
+<li><a href="/next" target="_blank">New window (opens a new tab)</a></li>
 <li><a href="/redirect">HTTP redirect</a></li>
 <li><a href="/https">Redirect to HTTPS example.com (internet required)</a></li>
 <li><a href="/download">Attachment download (repeat for same filename)</a></li>

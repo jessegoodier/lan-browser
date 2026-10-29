@@ -14,43 +14,80 @@ private struct BookmarkDraft: Identifiable {
 private enum BrowserSheet: Identifiable {
     case bookmark(BookmarkDraft)
     case download(DownloadExport)
+    case diagnostics(DiagnosticsTarget)
+    case response(PageResponse)
+    case certificate(CertificateIssue)
 
     var id: UUID {
         switch self {
+        case .response(let response): return response.id
+        case .certificate(let issue): return issue.id
         case .bookmark(let draft): return draft.id
         case .download(let export): return export.id
+        case .diagnostics(let target): return target.id
         }
     }
 }
 
 struct BrowserScreen: View {
-    @StateObject private var browser = BrowserModel()
+    @StateObject private var session = BrowserSession()
     @StateObject private var store = BookmarkStore()
+    @StateObject private var devices: DeviceStore
+    @StateObject private var network: LocalNetwork
+    @Environment(\.scenePhase) private var scenePhase
+    @AppStorage(OpenBookmarksIn.defaultsKey) private var openPreference = OpenBookmarksIn.newTab
+    @AppStorage(TrustedNetworkNotice.acceptedKey) private var noticeAccepted = false
+    @ViewState private var renaming: DeviceRename?
     @ViewState private var addressInput = ""
     @ViewState private var sheet: BrowserSheet?
     @ViewState private var exportingDownload = false
     @ViewState private var editingAddress = false
     @ViewState private var showingInfo = false
-    @ViewState private var showingHelp = false
+    @ViewState private var bookmarkAfterInfo = false
+    @ViewState private var showingSettings = false
+    @ViewState private var showingTabs = false
+    @ViewState private var hiddenResponse: UUID?
+
+    init() {
+        let devices = DeviceStore()
+        _devices = StateObject(wrappedValue: devices)
+        _network = StateObject(wrappedValue: LocalNetwork(devices: devices))
+    }
+
+    private var tab: BrowserTab { session.selectedTab }
 
     var body: some View {
         // The browser controls live in the system bottom toolbar so that on the
         // foldable iPhone Duo the system can move them into the side strip, as Safari does.
         NavigationStack {
             ZStack {
-                BrowserWebView(webView: browser.webView)
-                    .opacity(browser.showingBookmarks ? 0 : 1)
-                    .allowsHitTesting(!browser.showingBookmarks && browser.pageError == nil)
-                    .accessibilityHidden(browser.showingBookmarks || browser.pageError != nil)
-                if browser.showingBookmarks {
+                // The response strip sits above the page rather than over it, so it never hides content.
+                VStack(spacing: 0) {
+                    if let issue = tab.certificateIssue {
+                        CertificateStrip(issue: issue) { sheet = .certificate(issue) }
+                    }
+                    responseBanner
+                    BrowserWebView(webView: tab.webView)
+                        .id(tab.id)
+                }
+                .opacity(tab.showingStartPage ? 0 : 1)
+                .allowsHitTesting(!tab.showingStartPage && tab.pageError == nil)
+                .accessibilityHidden(tab.showingStartPage || tab.pageError != nil)
+                if tab.showingStartPage {
                     bookmarksHome
-                } else if let error = browser.pageError {
+                } else if let error = tab.pageError {
                     ContentUnavailableView {
-                        Label("Page unavailable", systemImage: "wifi.exclamationmark")
+                        // When the server did answer, its status is the headline, not a generic failure.
+                        Label(tab.errorResponse.map { "HTTP \($0.statusLine)" } ?? "Page unavailable",
+                              systemImage: tab.errorResponse == nil ? "wifi.exclamationmark" : "exclamationmark.triangle")
                     } description: {
-                        Text(error)
+                        Text(error).textSelection(.enabled)
                     } actions: {
-                        Button("Retry") { browser.retry() }.buttonStyle(.borderedProminent)
+                        Button("Retry") { tab.retry() }.buttonStyle(.borderedProminent)
+                        if let response = tab.response { Button("Response Details") { sheet = .response(response) } }
+                        if let url = URL(string: tab.address), DiagnosticTarget(url: url) != nil {
+                            Button("Diagnose") { sheet = .diagnostics(DiagnosticsTarget(url: url)) }
+                        }
                         Button("Edit Address") { editingAddress = true }
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -60,33 +97,69 @@ struct BrowserScreen: View {
             .overlay(alignment: .top) { loadingIndicator }
             .overlay(alignment: .bottom) { downloadIndicator }
             .navigationTitle("LAN Browser")
-            .toolbar(browser.showingBookmarks ? .visible : .hidden, for: .navigationBar)
+            .toolbar(tab.showingStartPage ? .visible : .hidden, for: .navigationBar)
             .toolbar { browserToolbar }
         }
-        .onChange(of: browser.address) { _, value in
+        .onChange(of: tab.address) { _, value in
             if !editingAddress { addressInput = value }
         }
         .onChange(of: editingAddress) { _, editing in
-            if editing { addressInput = browser.address }
+            if editing { addressInput = tab.address }
         }
-        .onChange(of: browser.export?.id) { _, _ in presentPendingDownload() }
+        .onChange(of: session.export?.id) { _, _ in presentPendingDownload() }
+        .onChange(of: tab.showingStartPage && scenePhase == .active, initial: true) { _, visible in
+            network.setVisible(visible, bookmarks: store.bookmarks)
+        }
+        .onChange(of: scenePhase) { _, phase in
+            network.setForeground(phase != .background)
+            if phase == .background { session.saveTabs() }
+        }
+        .onChange(of: store.bookmarks) { _, bookmarks in network.bookmarksChanged(bookmarks) }
+        .sheet(isPresented: Binding(get: { !noticeAccepted }, set: { _ in })) {
+            TrustedNetworkNotice { noticeAccepted = true }
+        }
         .sheet(isPresented: $editingAddress) {
             AddressEntry(text: $addressInput) { open(addressInput) }
         }
-        .sheet(isPresented: $showingHelp) {
-            BrowserHelpSheet(browser: browser) {
-                showingHelp = false
-                browser.openBrowserCheck()
+        .sheet(isPresented: $showingSettings) {
+            SettingsView(session: session, network: network, devices: devices) {
+                showingSettings = false
+                tab.openBrowserCheck()
             }
         }
-        .sheet(isPresented: $showingInfo) {
-            PageInfoSheet(info: browser.pageInfo())
+        .sheet(isPresented: $showingInfo, onDismiss: {
+            if bookmarkAfterInfo {
+                bookmarkAfterInfo = false
+                newBookmark()
+            }
+        }) {
+            PageInfoSheet(info: tab.pageInfo(), devices: devices, lookUp: network.isEnabled) {
+                bookmarkAfterInfo = true
+                showingInfo = false
+            }
+        }
+        .fullScreenCover(isPresented: $showingTabs) {
+            TabSwitcher(session: session, devices: devices)
+        }
+        .alert("Rename Device", isPresented: Binding(
+            get: { renaming != nil }, set: { if !$0 { renaming = nil } }
+        )) {
+            TextField(DeviceStore.defaultName(for: renaming?.host ?? ""), text: Binding(
+                get: { renaming?.name ?? "" }, set: { renaming?.name = $0 }
+            ))
+            Button("Save") {
+                if let renaming { devices.rename(renaming.host, to: renaming.name) }
+                renaming = nil
+            }
+            Button("Cancel", role: .cancel) { renaming = nil }
+        } message: {
+            Text("Shown for every bookmark on \(renaming?.host ?? "this device"). Leave it empty to use the default name.")
         }
         .sheet(item: $sheet, onDismiss: {
             if exportingDownload {
                 exportingDownload = false
-                browser.finishExport()
-                browser.presentNextExport()
+                session.finishExport()
+                session.presentNextExport()
             }
             presentPendingDownload()
         }) { presented in
@@ -102,33 +175,76 @@ struct BrowserScreen: View {
                 DownloadSavePicker(url: export.url) { sheet = nil }
                     .ignoresSafeArea()
                     .interactiveDismissDisabled()
+            case .diagnostics(let target):
+                DiagnosticsSheet(url: target.url)
+            case .certificate(let issue):
+                NavigationStack {
+                    CertificateDetailsView(issue: issue)
+                        .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { sheet = nil } } }
+                }
+                .presentationDetents([.medium, .large])
+            case .response(let response):
+                NavigationStack {
+                    ResponseDetailsView(response: response)
+                        .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { sheet = nil } } }
+                }
+                .presentationDetents([.medium, .large])
             }
         }
         .alert("LAN Browser", isPresented: Binding(
-            get: { sheet == nil && (browser.message != nil || store.errorMessage != nil) },
-            set: { if !$0 { browser.message = nil; store.errorMessage = nil } }
+            get: { sheet == nil && (session.message != nil || store.errorMessage != nil || devices.errorMessage != nil) },
+            set: { if !$0 { clearMessages() } }
         )) {
-            Button("OK", role: .cancel) { browser.message = nil; store.errorMessage = nil }
+            Button("OK", role: .cancel) { clearMessages() }
         } message: {
-            Text(browser.message ?? store.errorMessage ?? "")
+            Text(session.message ?? store.errorMessage ?? devices.errorMessage ?? "")
         }
+    }
+
+    /// Each bookmark’s host and port, also at the IP it was last seen at, so discovery can skip
+    /// web servers already saved.
+    private var bookmarkedEndpoints: Set<String> {
+        Set(store.bookmarks.compactMap { BrowserAddress.parse($0.url) }.flatMap { url in
+            ServiceCatalog.endpointKeys(for: url, address: url.host.flatMap(devices.address(for:)))
+        })
+    }
+
+    /// The other way to open a row, offered in its long-press menu.
+    private var alternateOpenTitle: String { openPreference == .newTab ? "Open in Current Tab" : "Open in New Tab" }
+
+    private func openAlternate(_ input: String) {
+        editingAddress = false
+        session.open(input, newTab: openPreference != .newTab)
     }
 
     private var bookmarksHome: some View {
         List {
+                if !network.isEnabled && !network.cardDismissed {
+                    Section {
+                        LocalNetworkCard(turnOn: { network.isEnabled = true }, notNow: { network.cardDismissed = true })
+                    }
+                }
                 Section {
+                    if store.bookmarks.isEmpty && network.isEnabled {
+                        Text("No bookmarks yet. Tap + to save a web address, or add one from On This Network below.")
+                            .foregroundStyle(.secondary)
+                    }
                     ForEach(store.bookmarks) { bookmark in
                         Button {
-                            open(bookmark.url)
+                            openBookmark(bookmark.url)
                         } label: {
                             HStack(spacing: 14) {
                                 Image(systemName: "network")
                                     .font(.title3)
                                     .foregroundStyle(.tint)
                                     .frame(width: 30)
+                                    .overlay(alignment: .bottomTrailing) {
+                                        if network.isEnabled { StatusDot(state: network.status[bookmark.id]) }
+                                    }
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(bookmark.title).font(.headline).foregroundStyle(.primary)
-                                    Text(bookmark.url).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                                    Text(BrowserAddress.parse(bookmark.url).map { devices.label(for: $0) } ?? bookmark.url)
+                                        .font(.caption).foregroundStyle(.secondary).lineLimit(1)
                                 }
                                 Spacer(minLength: 0)
                                 Image(systemName: "chevron.right").font(.caption).foregroundStyle(.tertiary)
@@ -143,36 +259,72 @@ struct BrowserScreen: View {
                             }.tint(.blue)
                         }
                         .contextMenu {
+                            Button(alternateOpenTitle, systemImage: "plus.square.on.square") { openAlternate(bookmark.url) }
                             Button("Edit Bookmark", systemImage: "pencil") {
                                 sheet = .bookmark(BookmarkDraft(bookmark: bookmark, isNew: false))
+                            }
+                            if let url = BrowserAddress.parse(bookmark.url) {
+                                Button("Check Connection", systemImage: "stethoscope") {
+                                    sheet = .diagnostics(DiagnosticsTarget(url: url))
+                                }
+                                if let host = url.host {
+                                    Button("Rename Device…", systemImage: "character.cursor.ibeam") { rename(host) }
+                                }
                             }
                         }
                     }
                     .onDelete(perform: store.delete)
                     .onMove(perform: store.move)
                 } footer: {
-                    Text("Home services and captive-portal login pages, one tap away. HTTP Forever is plain HTTP, so hotel and cafe Wi-Fi can show their sign-in screen. Swipe right on a bookmark to edit it.")
+                    Text("Home services and captive-portal login pages, one tap away. HTTP Forever is plain HTTP, so hotel and cafe Wi-Fi can show their sign-in screen. Swipe right on a bookmark to edit it, or touch and hold for more options.")
+                }
+                // Below the bookmarks, so arriving results never push saved rows out from under a tap.
+                if network.isEnabled {
+                    DiscoveredSection(
+                        network: network,
+                        bookmarked: bookmarkedEndpoints,
+                        label: { devices.label(for: $0.url, address: $0.address) },
+                        open: { openBookmark($0.url.absoluteString) },
+                        alternateOpen: (alternateOpenTitle, { openAlternate($0.url.absoluteString) }),
+                        save: { store.save(Bookmark(title: $0.name, url: $0.url.absoluteString)) },
+                        rename: { if let host = $0.url.host { rename(host) } }
+                    )
                 }
             }
+            .refreshable { await network.refresh() }
             .overlay {
-                if store.bookmarks.isEmpty {
+                if store.bookmarks.isEmpty && !network.isEnabled {
                     ContentUnavailableView("No bookmarks yet", systemImage: "bookmark", description: Text("Tap + to save a web address."))
                 }
             }
     }
 
     @ViewBuilder private var loadingIndicator: some View {
-        if browser.isLoading && !browser.showingBookmarks {
-            ProgressView(value: browser.progress).tint(.blue)
+        if tab.isLoading && !tab.showingStartPage {
+            ProgressView(value: tab.progress).tint(.blue)
                 .accessibilityLabel("Page loading")
         }
     }
 
+    /// Any main-page answer other than 200 is shown, since an error page can be blank.
+    @ViewBuilder private var responseBanner: some View {
+        if !tab.showingStartPage, tab.pageError == nil, let response = tab.response,
+           response.statusCode != 200, response.id != hiddenResponse {
+            ResponseBanner(response: response) {
+                sheet = .response(response)
+            } diagnose: {
+                if let url = URL(string: response.url) { sheet = .diagnostics(DiagnosticsTarget(url: url)) }
+            } dismiss: {
+                hiddenResponse = response.id
+            }
+        }
+    }
+
     @ViewBuilder private var downloadIndicator: some View {
-        if browser.activeDownloadCount > 0 {
+        if session.activeDownloadCount > 0 {
             HStack(spacing: 8) {
                 ProgressView().controlSize(.small)
-                Text("Downloading \(browser.activeDownloadCount == 1 ? "file" : "\(browser.activeDownloadCount) files")…")
+                Text("Downloading \(session.activeDownloadCount == 1 ? "file" : "\(session.activeDownloadCount) files")…")
                     .font(.caption).foregroundStyle(.secondary)
             }
             .padding(.horizontal, 12).padding(.vertical, 6)
@@ -181,63 +333,97 @@ struct BrowserScreen: View {
         }
     }
 
-    private var returnsToPage: Bool { browser.showingBookmarks && !browser.address.isEmpty }
+    private var returnsToPage: Bool { tab.showingStartPage && !tab.address.isEmpty }
 
     @ToolbarContentBuilder private var browserToolbar: some ToolbarContent {
-        if browser.showingBookmarks {
+        if tab.showingStartPage {
             ToolbarItem(placement: .topBarLeading) { EditButton().disabled(store.bookmarks.isEmpty) }
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Help & Privacy", systemImage: "questionmark.circle") { showingHelp = true }
+                Button("Settings", systemImage: "gearshape") { showingSettings = true }
             }
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Add Bookmark", systemImage: "plus") { newBookmark() }
             }
         }
         ToolbarItemGroup(placement: .bottomBar) {
-            Button("Back", systemImage: "chevron.left") { browser.back() }
-                .disabled(!browser.canGoBack || browser.showingBookmarks)
-            Button("Forward", systemImage: "chevron.right") { browser.forward() }
-                .disabled(!browser.canGoForward || browser.showingBookmarks)
+            Button("Back", systemImage: "chevron.left") { tab.back() }
+                .disabled(!tab.canGoBack || tab.showingStartPage)
+            Button("Forward", systemImage: "chevron.right") { tab.forward() }
+                .disabled(!tab.canGoForward || tab.showingStartPage)
             // A plain button (not an inline text field) so it still works when the
             // system moves the toolbar into the iPhone Duo's side strip.
-            Button("Address", systemImage: browser.address.hasPrefix("https:") ? "lock" : "network") {
+            Button("Address", systemImage: tab.address.hasPrefix("https:") ? "lock" : "network") {
                 editingAddress = true
             }
-            Button(browser.isLoading ? "Stop Loading" : "Reload", systemImage: browser.isLoading ? "xmark" : "arrow.clockwise") {
-                browser.reloadOrStop()
+            Button(tab.isLoading ? "Stop Loading" : "Reload", systemImage: tab.isLoading ? "xmark" : "arrow.clockwise") {
+                tab.reloadOrStop()
             }
-            .disabled(browser.showingBookmarks || browser.address.isEmpty)
+            .disabled(tab.showingStartPage || tab.address.isEmpty)
             Button("Page Info", systemImage: "info.circle") { showingInfo = true }
-                .disabled(browser.showingBookmarks || browser.address.isEmpty)
-            Button(returnsToPage ? "Return to Page" : "Bookmarks", systemImage: returnsToPage ? "globe" : "book") {
+                .disabled(tab.showingStartPage || tab.address.isEmpty)
+            // Tap toggles bookmarks; touch and hold offers Add Bookmark, as in Safari.
+            Menu {
+                Button("Add Bookmark", systemImage: "bookmark") { newBookmark() }
+                    .disabled(tab.address.isEmpty)
+            } label: {
+                Label(returnsToPage ? "Return to Page" : "Bookmarks", systemImage: returnsToPage ? "globe" : "book")
+            } primaryAction: {
                 editingAddress = false
-                browser.showingBookmarks = !returnsToPage
+                tab.showingStartPage = !returnsToPage
             }
-            Button("Add Bookmark", systemImage: "bookmark") { newBookmark() }
+            Menu {
+                Button("New Tab", systemImage: "plus.square.on.square") { session.newTab() }
+                Button("Close Tab", systemImage: "xmark", role: .destructive) { session.close(tab) }
+            } label: {
+                Label("Tabs", systemImage: "square.on.square")
+                    .accessibilityValue("\(session.tabs.count) open")
+            } primaryAction: {
+                Task {
+                    await tab.captureSnapshot()
+                    showingTabs = true
+                }
+            }
         }
     }
 
-
-
     private func open(_ input: String) {
-        if browser.navigate(input) {
-            addressInput = browser.address
+        if session.open(input, newTab: false) {
+            addressInput = tab.address
             editingAddress = false
         }
     }
 
+    private func openBookmark(_ input: String) {
+        editingAddress = false
+        session.openBookmark(input)
+    }
+
+    private func rename(_ host: String) {
+        renaming = DeviceRename(host: host, name: devices.customName(for: host) ?? devices.name(for: host))
+    }
+
+    private func clearMessages() {
+        session.message = nil
+        store.errorMessage = nil
+        devices.errorMessage = nil
+    }
+
     private func presentPendingDownload() {
-        guard sheet == nil, let export = browser.export else { return }
+        guard sheet == nil, let export = session.export else { return }
         exportingDownload = true
         sheet = .download(export)
     }
 
     private func newBookmark() {
         editingAddress = false
-        let url = browser.showingBookmarks ? "" : browser.address
-        let title = browser.showingBookmarks ? "" : browser.title
-        sheet = .bookmark(BookmarkDraft(bookmark: Bookmark(title: title, url: url), isNew: true))
+        let onPage = !tab.showingStartPage
+        sheet = .bookmark(BookmarkDraft(bookmark: Bookmark(title: onPage ? tab.title : "", url: onPage ? tab.address : ""), isNew: true))
     }
+}
+
+private struct DeviceRename {
+    let host: String
+    var name: String
 }
 
 private struct ToolbarButtonStyle: ButtonStyle {
@@ -281,9 +467,21 @@ private struct AddressEntry: View {
 private struct PageInfoSheet: View {
     @Environment(\.dismiss) private var dismiss
     let info: PageInfo
+    @ObservedObject var devices: DeviceStore
+    /// Native lookups run only with Local Network Features on, so this sheet never triggers the prompt by itself.
+    let lookUp: Bool
+    let addBookmark: () -> Void
     @ViewState private var copied = false
+    @ViewState private var deviceName = ""
+
+    private var deviceDetail: String {
+        let record = devices.records[DeviceStore.key(info.host)]
+        let other = DeviceStore.isIPAddress(info.host) ? record?.hostname : record?.address
+        return [info.host, other].compactMap { $0 }.joined(separator: " · ")
+    }
 
     private var connection: (text: String, symbol: String, color: Color) {
+        if info.certificateIssue != nil { return ("Encrypted (HTTPS), but the certificate isn’t trusted", "exclamationmark.circle.fill", .red) }
         if info.isFullySecure { return ("Encrypted (HTTPS)", "lock.fill", .green) }
         if info.isEncrypted { return ("HTTPS with insecure content on the page", "lock.trianglebadge.exclamationmark", .orange) }
         return ("Not encrypted (HTTP). Traffic on your network can be read.", "lock.open.fill", .orange)
@@ -292,11 +490,34 @@ private struct PageInfoSheet: View {
     var body: some View {
         NavigationStack {
             List {
+                if !info.host.isEmpty {
+                    Section {
+                        TextField(devices.name(for: info.host), text: $deviceName)
+                            .textInputAutocapitalization(.never).autocorrectionDisabled()
+                            .submitLabel(.done)
+                            .onSubmit { devices.rename(info.host, to: deviceName) }
+                            .accessibilityLabel("Device name")
+                        Text(deviceDetail).font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
+                    } header: { Text("Device") } footer: {
+                        Text("Shown for every bookmark on this device. Leave it empty to use the default name.")
+                    }
+                }
                 Section("Address") {
                     Text(info.url).font(.callout.monospaced()).textSelection(.enabled)
                     Button(copied ? "Copied" : "Copy Address", systemImage: copied ? "checkmark" : "doc.on.doc") {
                         UIPasteboard.general.string = info.url
                         copied = true
+                    }
+                    Button("Add Bookmark", systemImage: "bookmark", action: addBookmark)
+                }
+                if let response = info.response {
+                    Section("Response") {
+                        LabeledContent("Status") { Text(response.statusLine).monospaced() }
+                        LabeledContent("Method", value: response.method)
+                        if let type = response.header("Content-Type") { LabeledContent("Content-Type", value: type) }
+                        if let length = response.header("Content-Length") { LabeledContent("Content-Length", value: length) }
+                        if let server = response.header("Server") { LabeledContent("Server", value: server) }
+                        NavigationLink("All Response Headers (\(response.headers.count))") { ResponseDetailsView(response: response) }
                     }
                 }
                 Section("Connection") {
@@ -306,12 +527,26 @@ private struct PageInfoSheet: View {
                     }
                     if let subject = info.certificateSubject { LabeledContent("Issued to", value: subject) }
                     if let issuer = info.certificateIssuer { LabeledContent("Issued by", value: issuer) }
+                    if let issue = info.certificateIssue {
+                        NavigationLink("Show Certificate") { CertificateDetailsView(issue: issue) }
+                    }
                 }
                 Section("Page") {
                     if !info.title.isEmpty { LabeledContent("Title", value: info.title) }
                     LabeledContent("Host", value: info.host)
                     LabeledContent("Port", value: info.port.map(String.init) ?? "Default (\(info.isEncrypted ? 443 : 80))")
                     LabeledContent("Protocol", value: info.scheme)
+                }
+                if let url = URL(string: info.url), DiagnosticTarget(url: url) != nil {
+                    Section {
+                        NavigationLink {
+                            DiagnosticsView(url: url)
+                        } label: {
+                            Label("Why Can’t I Connect?", systemImage: "stethoscope")
+                        }
+                    } footer: {
+                        Text("Checks Wi-Fi, Local Network access, name lookup, the port, and whether the server answers.")
+                    }
                 }
             }
             .navigationTitle("Page Info")
@@ -321,6 +556,18 @@ private struct PageInfoSheet: View {
             }
         }
         .presentationDetents([.medium, .large])
+        .task {
+            guard !info.host.isEmpty else { return }
+            deviceName = devices.customName(for: info.host) ?? ""
+            guard lookUp else { return }
+            let sighting = await NetworkProbe.sighting(of: info.host, reverseLookup: true)
+            devices.record(address: sighting.address, hostname: sighting.hostname, for: info.host)
+        }
+        .onDisappear {
+            if !info.host.isEmpty, deviceName != (devices.customName(for: info.host) ?? "") {
+                devices.rename(info.host, to: deviceName)
+            }
+        }
     }
 }
 
@@ -391,76 +638,5 @@ private struct DownloadSavePicker: UIViewControllerRepresentable {
         init(completion: @escaping () -> Void) { self.completion = completion }
         func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) { completion() }
         func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) { completion() }
-    }
-}
-
-
-private struct BrowserHelpSheet: View {
-    @Environment(\.dismiss) private var dismiss
-    @ObservedObject var browser: BrowserModel
-    let openCheck: () -> Void
-    @ViewState private var confirmingClear = false
-    @ViewState private var clearing = false
-    @ViewState private var cleared = false
-
-    var body: some View {
-        NavigationStack {
-            List {
-                Section("Using LAN Browser") {
-                    Text("Save home-server addresses and open Wi-Fi sign-in pages. Addresses without a scheme use HTTP. HTTP traffic is not encrypted; use HTTPS when your service supports it.")
-                    Text("On public Wi-Fi, open the HTTP Forever bookmark to request the network’s sign-in page. A portal appears only when that network requires sign-in.")
-                    Text("For home services, use the same Wi-Fi network as your server and enter its hostname or IP address and port. LAN Browser does not scan for devices or bypass certificate errors.")
-                    Button("Run Browser Check", systemImage: "checkmark.circle", action: openCheck)
-                    Text("Check page rendering and Save to Files without a home server or an internet connection.").font(.caption).foregroundStyle(.secondary)
-                }
-                Section("Privacy") {
-                    NavigationLink("Privacy Policy") { PrivacyPolicyView() }
-                    Text("Bookmarks stay on this device. Websites can receive your requests and form entries and store cookies and website data. LAN Browser has no analytics, ads, or developer-operated backend.")
-                    Button(clearing ? "Clearing Website Data…" : "Clear Cookies & Website Data", role: .destructive) {
-                        confirmingClear = true
-                    }.disabled(clearing)
-                    Text("Signs you out of websites and removes their cookies, caches, and local storage. Your bookmarks and files saved to Files remain.").font(.caption).foregroundStyle(.secondary)
-                    if cleared { Text("Website data cleared.").foregroundStyle(.secondary) }
-                }
-                Section("Support") {
-                    Link("Ask for Help or Report a Problem", destination: URL(string: "https://github.com/jessegoodier/lan-browser/issues")!)
-                    Text("Support uses public GitHub Issues and requires a GitHub account to post. Do not include passwords, private server addresses, or other sensitive information.").font(.caption).foregroundStyle(.secondary)
-                }
-            }
-            .navigationTitle("Help & Privacy")
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
-            .confirmationDialog("Clear all cookies and website data?", isPresented: $confirmingClear, titleVisibility: .visible) {
-                Button("Clear Website Data", role: .destructive) {
-                    clearing = true
-                    cleared = false
-                    Task { @MainActor in
-                        await browser.clearWebsiteData()
-                        clearing = false
-                        cleared = true
-                    }
-                }
-            } message: { Text("You will be signed out of websites. Bookmarks and exported downloads are kept.") }
-        }
-    }
-}
-
-private struct PrivacyPolicyView: View {
-    private var policy: String {
-        guard let url = Bundle.main.url(forResource: "privacy_policy", withExtension: "md"),
-              let text = try? String(contentsOf: url, encoding: .utf8) else {
-            return "The privacy policy could not be loaded. Please use the online policy link below."
-        }
-        return text
-    }
-
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                Text(policy).textSelection(.enabled)
-                Link("View Online Privacy Policy", destination: URL(string: "https://github.com/jessegoodier/lan-browser/blob/main/LANBrowser/privacy_policy.md")!)
-            }.frame(maxWidth: .infinity, alignment: .leading).padding()
-        }
-        .navigationTitle("Privacy Policy")
-        .navigationBarTitleDisplayMode(.inline)
     }
 }
