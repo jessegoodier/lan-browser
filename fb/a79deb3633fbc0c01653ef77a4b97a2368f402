@@ -1,0 +1,24 @@
+AGENTS.md
+  s_df282fcf9ae99d::t_7228744702193c 25,32,55-66,84-88
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "fba79deb3633fbc0c01653ef77a4b97a2368f402",
+  "prompts": {},
+  "humans": {
+    "h_cca6aa2712613d": {
+      "author": "jesse goodier <31039225+jessegoodier@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_df282fcf9ae99d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7f724492-7d77-4b2c-815a-d87a3916d5b4",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "jesse goodier <31039225+jessegoodier@users.noreply.github.com>"
+    }
+  }
+}
