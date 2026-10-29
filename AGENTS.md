@@ -22,14 +22,14 @@ All app code is in `LANBrowser/`:
 | `DeviceNames.swift` | `DeviceRecord`/`DeviceStore`: friendly names, last-seen IPs and reverse-lookup names per host (devices.json); `label(for:)` builds `name:port · IP` |
 | `Address.swift` | `BrowserAddress.parse`: user input to http/https URL |
 | `ServiceCatalog.swift` | Bonjour types, service-to-URL mapping, duplicate merging, `isLocalHost` |
-| `DiagnosticsLogic.swift` | Diagnostic step types, advice text, HTTP status/header parsing, report text |
+| `DiagnosticsLogic.swift` | Diagnostic step types, advice text, HTTP status/header/`<title>` parsing, report text; `PageResponse` (a non-200 main-page response with its headers), `HTTPStatus` (standard reason phrases), `ErrorText` (exact error domain/code/URL), `Redirects` and `BlockedPorts` (the Fetch “bad ports” WebKit drops silently) |
 | `NetworkProbe.swift` | Native checks: TCP connect, raw HTTP GET (with TLS trust recording), DNS lookup, network snapshot, and `NetworkProbe.follow` for redirect chains (`Redirects.limit` = 5; used by diagnostics and the port scan’s page reading) |
 | `Certificates.swift` | `CertificateSummary`, `CertificateIssue`: chain details (subject, common name, validity, key, serial, SHA-256 fingerprints) and report text for untrusted local certificates |
 | `LocalNetwork.swift` | Opt-in Bonjour discovery (`NWBrowser`), run on demand after one automatic first scan, the two-pass port scan once confirmed, and bookmark reachability dots |
 | `PortScan.swift` | Pure port-scan logic: `PortScanPreset`, `IPv4Range` (capped at 1,024 addresses), `PortScanPlan` (a confirmed scan), `WebFinding` (a page that answered), and `PortScan.collapse` and `PortScan.name` (result clean-up and row titles) |
 | `DiscoveryCache.swift` | `DiscoveryScan` in discovered.json: the last On This Network scan, kept until the next scan or clear |
 | `ConnectionDiagnostics.swift` | Runs the “Why can’t I connect?” steps |
-| `NetworkViews.swift` | Opt-in card, On This Network section, status dot, diagnostics views |
+| `NetworkViews.swift` | Opt-in card, On This Network section, status dot, port-scan confirmation sheet, diagnostics views, the response strip and details (`ResponseBanner`, `ResponseDetailsView`), and the certificate strip and details (`CertificateStrip`, `CertificateDetailsView`) |
 | `SettingsView.swift` | Settings sheet, help page, privacy policy view, and `TrustedNetworkNotice` (the first-use notice, also shown at the top of the help page) |
 
 Other locations:
@@ -52,6 +52,18 @@ To test discovery manually:
 
 The simulator sees the Mac’s LAN. The Local Network permission prompt only behaves realistically on a device.
 
+### Testing without UI automation
+
+There is no XCUITest target and simulator taps can’t be scripted here, so test by setting state and taking screenshots:
+- **Simulator state:** write JSON into the app container before launch. Get the folder with `xcrun simctl get_app_container <sim> com.jesse.lanbrowser data`, then use `Library/Application Support/LANBrowser/`:
+  - `tabs.json` opens a given URL in the selected tab, which loads on launch.
+  - `discovered.json` shows a saved scan.
+  - Set preferences with `xcrun simctl spawn <sim> defaults write com.jesse.lanbrowser <key> …`, for example `localNetworkFeatures`, `localNetworkAutoScanned`, `trustedNetworkNoticeAccepted` or `portScanPreset`.
+  - Capture with `xcrun simctl io <sim> screenshot`.
+- **Network code** (`LocalNetwork`, `ConnectionDiagnostics`, `NetworkProbe`) also compiles for macOS. Build it with a small `@main` runner under `build/` (gitignored) using the same `swiftc` flags as `Scripts/check.sh`, then run it against the real LAN.
+- **Test servers:** a few lines of Python `http.server` can return a specific status or body, e.g. a blank 404 or a 404 sent as `application/octet-stream`.
+- **zsh:** don’t name a shell loop variable `path`. In zsh it is tied to `PATH` and breaks every later command.
+
 ## Conventions
 
 - **Xcode project:** `project.pbxproj` uses hand-numbered IDs, not synchronized folders. Every new file needs a PBXFileReference, a PBXBuildFile, a group child and a Sources (or Resources) entry. Continue the existing ID sequence.
@@ -69,6 +81,11 @@ The simulator sees the Mac’s LAN. The Local Network permission prompt only beh
 - **Discovery** runs only when the user has turned on **Local Network Features**. It runs one automatic scan the first time the feature is turned on (or the first time the bookmark list opens after updating with it on), then only from a user action: **Scan Again** or pull-to-refresh. Don’t add automatic Bonjour or port scans.
 - **Port scan** (`PortScan.swift`, run from `LocalNetwork.swift`): never port-scan without a confirmed `PortScanPlan`, never from the automatic first scan, only from a user-started scan, and only addresses in the phone’s own network range (capped at 1,024).
 - **Diagnostics** run only when the user opens them.
+- **Never a blank page:** any main-frame HTTP response other than 200 must be shown, as the strip above the page or, if it can’t be displayed, as the error screen headed by the status.
+  - Error responses are never turned into downloads.
+  - Load failures show the exact error domain, code, underlying error and URL.
+  - Browser-blocked ports are explained before WebKit drops them silently.
+  - The status code and header values are shown verbatim. Reason phrases are the standard ones, because WebKit doesn’t expose the server’s, and the UI says so.
 - **Device names** are keyed by `DeviceStore.key(host)`: the lowercased host name, or the IP when there is no host name. iOS doesn’t expose MAC addresses to apps, so don’t key names by hardware. IP and reverse-lookup learning runs only with **Local Network Features** on, from discovery, the port scan, status checks, or a user-opened Page Info sheet. Don’t add lookups that run otherwise.
 - **Bonjour types:** `NSBonjourServices` in `Info.plist` must exactly match `ServiceCatalog.types`; `check.sh` enforces this. Only add types that serve a web page.
 - **HTTP probes** use raw `NWConnection`, not `URLSession`. ATS only exempts WebKit content and local hosts, so URLSession would block public plain-HTTP hosts. Certificate overrides happen only in `BrowserTab`’s server-trust challenge handler and only for `ServiceCatalog.isLocalHost` hosts. Every override is recorded in `untrustedCertificates` and must stay visible (the red “!” strip and Page Info). Never extend it to internet hosts. Diagnostics only *report* trust.
