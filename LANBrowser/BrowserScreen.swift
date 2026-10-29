@@ -223,6 +223,7 @@ struct BrowserScreen: View {
 
     private func openAlternate(_ input: String) {
         editingAddress = false
+        addressFocused = false
         session.open(input, newTab: openPreference != .newTab)
     }
 
@@ -504,6 +505,7 @@ struct BrowserScreen: View {
 
     private func openBookmark(_ input: String) {
         editingAddress = false
+        addressFocused = false
         session.openBookmark(input)
     }
 
