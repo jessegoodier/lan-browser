@@ -37,6 +37,7 @@ All app code is in `LANBrowser/`:
 Other locations:
 - `Tests/CoreChecks.swift` is a standalone `@main` executable using `precondition`. There is no XCTest target.
 - `Tests/serve_fixture.py` is a manual test server on port 8889.
+- `Scripts/make_icon.swift` renders the app icon (“LAN” in gold on dark gray) to `AppIcon.appiconset/AppIcon.png`. Edit and rerun it rather than editing the PNG by hand.
 - `docs/TESTING.md` lists manual on-device checks.
 - `LICENSE` is MIT.
 - `.github/workflows/`: `ci.yml` (check.sh and an unsigned simulator build), `codeql.yml` (Swift, Actions, Python), `scorecard.yml`, `zizmor.yml` (workflow security audit), `dependency-review.yml`.
