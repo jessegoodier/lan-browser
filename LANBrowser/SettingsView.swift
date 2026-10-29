@@ -11,6 +11,8 @@ struct SettingsView: View {
     @ObservedObject var devices: DeviceStore
     let openCheck: () -> Void
     @AppStorage(OpenBookmarksIn.defaultsKey) private var openPreference = OpenBookmarksIn.newTab
+    @AppStorage(PasswordPolicy.autofillKey) private var autofillSavedPasswords = true
+    @AppStorage(PasswordPolicy.enabledKey) private var offerToSavePasswords = true
     @AppStorage(TabPolicy.restoreKey) private var restoreTabs = true
     @ViewState private var confirmingClear = false
     @ViewState private var confirmingReset = false
@@ -34,6 +36,14 @@ struct SettingsView: View {
                     Text("A bookmark always fills a blank tab. When tabs are restored, their addresses and Back history are saved on this device.")
                 }
                 .onChange(of: restoreTabs) { _, _ in session.saveTabs() }
+
+                Section {
+                    Toggle("Offer to Save Passwords", isOn: $offerToSavePasswords)
+                    Toggle("AutoFill Saved Passwords", isOn: $autofillSavedPasswords)
+                    NavigationLink("Saved Passwords") { SavedPasswordsView() }
+                } header: { Text("Passwords") } footer: {
+                    Text("On by default. Each supported login submission offers to save its username and password in this device’s Keychain, including HTTP pages and passwords saved before. Turning offers off keeps existing passwords. AutoFill Saved Passwords is also on by default and fills matching login forms, including HTTP pages, without submitting them. View or delete them in Saved Passwords. HTTP traffic remains unencrypted.")
+                }
 
                 Section {
                     Toggle("Local Network Features", isOn: $network.isEnabled)
@@ -74,7 +84,7 @@ struct SettingsView: View {
                     if cleared { Text("Website data cleared.").foregroundStyle(.secondary) }
                     NavigationLink("Privacy Policy") { PrivacyPolicyView() }
                 } header: { Text("Privacy") } footer: {
-                    Text("Bookmarks stay on this device. Websites can receive your requests and form entries and store cookies and website data. LAN Browser has no analytics, ads, or developer-operated backend. Clearing website data signs you out of websites and closes all tabs; bookmarks and files saved to Files remain.")
+                    Text("Bookmarks stay on this device. Websites can receive your requests and form entries and store cookies and website data. LAN Browser has no analytics, ads, or developer-operated backend. Clearing website data signs you out of websites and closes all tabs; bookmarks, saved passwords and files saved to Files remain.")
                 }
 
                 Section {
@@ -99,7 +109,7 @@ struct SettingsView: View {
                         cleared = true
                     }
                 }
-            } message: { Text("You’ll be signed out of websites, and all tabs will close. Bookmarks and exported downloads are kept.") }
+            } message: { Text("You’ll be signed out of websites, and all tabs will close. Bookmarks, saved passwords and exported downloads are kept.") }
             .sheet(item: $reviewingPreset) { preset in
                 PortScanConfirmationSheet(preset: preset, plan: network.plan(for: preset)) { network.confirm($0) }
             }
@@ -114,7 +124,7 @@ struct SettingsView: View {
 struct TrustedNetworkNotice: View {
     static let acceptedKey = "trustedNetworkNoticeAccepted"
     static let summary = "LAN Browser is intended exclusively for use on trusted home networks. It isn’t meant for browsing websites that are expected to be secure, such as banking, email or shopping."
-    static let details = "To reach home devices it loads plain HTTP pages, and it opens devices on your network even when their certificates aren’t trusted. When you’re on a network you don’t trust, use Safari."
+    static let details = "To reach home devices it loads plain HTTP pages, and it opens devices on your network even when their certificates aren’t trusted. When you’re on a network you don’t trust, use Safari. Login forms can offer to save passwords in this device’s Keychain, including on HTTP pages; AutoFill can fill saved passwords on matching login pages. Saving a password does not encrypt HTTP traffic."
 
     let accept: () -> Void
 
@@ -146,6 +156,7 @@ private struct HelpView: View {
             Text("On public Wi-Fi, open the HTTP Forever bookmark to request the network’s sign-in page. A portal appears only when that network requires sign-in.")
             Text("For home services, use the same Wi-Fi network as your server and enter its hostname or IP address and port. Devices on your network with self-signed or otherwise untrusted certificates open anyway, marked with a red “!” you can tap to see the certificate; internet sites with invalid certificates are still blocked.")
             Text("Bookmarks open in a new tab unless the current tab is blank; change this in Settings. Touch and hold a bookmark to open it the other way. Tap the tabs button to switch tabs, or touch and hold it for New Tab and Close Tab. Touch and hold the bookmarks button to bookmark the current page.")
+            Text("Offer to Save Passwords is on by default in Settings. Supported login forms offer Save or Not Now each time you submit, even for a password saved before. Saved Passwords lets you reveal, copy or delete saved credentials. Passwords stay in this device’s Keychain and aren’t synced to iCloud. AutoFill Saved Passwords is on by default and fills matching main-page login forms without submitting them; turn it off separately in Settings. Turning offers off keeps saved passwords; clearing website data keeps them too. Embedded sign-in frames, HTTP authentication dialogs and some custom forms aren’t supported.")
             Text("If a page won’t load, use Diagnose on the error screen, Why Can’t I Connect? in Page Info, or touch and hold a bookmark and choose Check Connection. Choose Rename Device… there, or use the Device section in Page Info, to give a device a friendly name.")
         }
         .navigationTitle("Using LAN Browser")

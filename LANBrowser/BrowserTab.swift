@@ -334,7 +334,10 @@ extension BrowserTab: WKUIDelegate {
     func webView(_ webView: WKWebView, runJavaScriptTextInputPanelWithPrompt prompt: String, defaultText: String?,
                  initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping @MainActor @Sendable (String?) -> Void) {
         let alert = UIAlertController(title: webView.url?.host, message: prompt, preferredStyle: .alert)
-        alert.addTextField { $0.text = defaultText }
+        alert.addTextField {
+            $0.text = defaultText
+            $0.autocapitalizationType = .none
+        }
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in completionHandler(nil) })
         alert.addAction(UIAlertAction(title: "OK", style: .default) { [weak alert] _ in completionHandler(alert?.textFields?.first?.text) })
         present(alert) { completionHandler(nil) }

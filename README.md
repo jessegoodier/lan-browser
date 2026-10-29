@@ -152,3 +152,7 @@ Issues and pull requests are welcome; see [AGENTS.md](AGENTS.md) for project lay
 ## License
 
 LAN Browser is released under the [MIT License](LICENSE).
+
+## Saved passwords
+
+Offer to Save Passwords is on by default in Settings (the gear). Each supported login-form submission offers Save or Not Now, including on HTTP pages and for previously saved credentials. Saving stores the username and password in this device’s Keychain, separated by scheme, host, port and username; saving again updates that entry. Passwords are available only while the device is unlocked and aren’t synced to iCloud or migrated to another device. Settings > Saved Passwords lets you reveal, copy and delete them. AutoFill Saved Passwords is also on by default and can be turned off separately in Settings. It fills supported main-page login forms for the exact saved scheme, host and port, including HTTP pages, without submitting the form. An entered username selects its matching account; an empty form uses the most recently saved account. Existing password text is preserved. Filled credentials are available to that website’s scripts before you submit.  Turning offers off and clearing website data keep saved passwords. Keychain entries may survive app deletion, so delete saved passwords before uninstalling. Embedded sign-in frames, HTTP authentication dialogs and some custom forms aren’t supported. Saving a password does not encrypt HTTP traffic.
