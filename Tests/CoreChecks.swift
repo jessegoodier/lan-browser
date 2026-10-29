@@ -113,8 +113,15 @@ struct CoreChecks {
         check(DiagnosticsText.statusCode(in: response) == 404, "Parse HTTP status code")
         check(DiagnosticsText.header("Server", in: response) == "nginx/1.25", "Parse header case-insensitively, ignoring the body")
         check(DiagnosticsText.statusCode(in: "SSH-2.0-OpenSSH_9.6\r\n") == nil, "Non-HTTP banner has no status")
-        check(DiagnosticsText.advice(for: .refused, target: target).contains("port 8080"), "Refused advice names the port")
-        check(DiagnosticsText.advice(for: .nameNotFound, target: target).contains(".local"), "Lookup advice explains .local names")
+        check(DiagnosticsText.advice(for: .refused, target: target, device: .iPhone).contains("port 8080"), "Refused advice names the port")
+        check(DiagnosticsText.advice(for: .nameNotFound, target: target, device: .iPhone).contains(".local"), "Lookup advice explains .local names")
+        check(DiagnosticsText.advice(for: .unreachable, target: target, device: .iPad).contains("this iPad and the device"), "Advice names the iPad")
+        check(DiagnosticsText.wrongInterface(device: .mac).hasPrefix("This Mac isn’t on Wi-Fi"), "Advice names the Mac")
+        let macPermission = DiagnosticsText.advice(for: .permissionDenied, target: target, device: .mac)
+        check(macPermission.contains("System Settings › Privacy & Security › Local Network") && !macPermission.contains("iOS"),
+              "Mac permission advice points to System Settings")
+        check(DiagnosticsText.advice(for: .permissionDenied, target: target, device: .iPhone).contains("If iOS just asked, tap Allow"),
+              "iPhone permission advice is unchanged")
         let steps = [DiagnosticStep(kind: .network, status: .passed, detail: "Wi-Fi"), DiagnosticStep(kind: .port, status: .failed, detail: "Refused", advice: "Start it.")]
         let report = DiagnosticsText.report(url: URL(string: "http://nas.local:8080/")!, steps: steps)
         check(report.contains("✓ Network: Wi-Fi") && report.contains("✗ Port: Refused\n  Start it."), "Report lists each step and advice")

@@ -35,6 +35,8 @@ struct BrowserScreen: View {
     @StateObject private var devices: DeviceStore
     @StateObject private var network: LocalNetwork
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    @FocusState private var addressFocused: Bool
     @AppStorage(OpenBookmarksIn.defaultsKey) private var openPreference = OpenBookmarksIn.newTab
     @AppStorage(TrustedNetworkNotice.acceptedKey) private var noticeAccepted = false
     @ViewState private var renaming: DeviceRename?
@@ -55,9 +57,10 @@ struct BrowserScreen: View {
     }
 
     private var tab: BrowserTab { session.selectedTab }
+    private var usesTopBar: Bool { BrowserLayout.usesTopBar(sizeClass) }
 
     var body: some View {
-        // The browser controls live in the system bottom toolbar so that on the
+        // On iPhone the browser controls live in the system bottom toolbar so that on the
         // foldable iPhone Duo the system can move them into the side strip, as Safari does.
         NavigationStack {
             ZStack {
@@ -88,7 +91,7 @@ struct BrowserScreen: View {
                         if let url = URL(string: tab.address), DiagnosticTarget(url: url) != nil {
                             Button("Diagnose") { sheet = .diagnostics(DiagnosticsTarget(url: url)) }
                         }
-                        Button("Edit Address") { editingAddress = true }
+                        Button("Edit Address") { editAddress() }
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(Color(uiColor: .systemBackground))
@@ -97,11 +100,17 @@ struct BrowserScreen: View {
             .overlay(alignment: .top) { loadingIndicator }
             .overlay(alignment: .bottom) { downloadIndicator }
             .navigationTitle("LAN Browser")
-            .toolbar(tab.showingStartPage ? .visible : .hidden, for: .navigationBar)
+            .navigationBarTitleDisplayMode(usesTopBar && !tab.showingStartPage ? .inline : .automatic)
+            .toolbar(tab.showingStartPage || usesTopBar ? .visible : .hidden, for: .navigationBar)
             .toolbar { browserToolbar }
         }
-        .onChange(of: tab.address) { _, value in
-            if !editingAddress { addressInput = value }
+        .focusedSceneValue(\.browserActions, browserActions)
+        .onChange(of: tab.address, initial: true) { _, value in
+            if !editingAddress && !addressFocused { addressInput = value }
+        }
+        .onChange(of: addressFocused) { _, focused in
+            // Leaving the field without going anywhere puts the current address back.
+            if !focused { addressInput = tab.address }
         }
         .onChange(of: editingAddress) { _, editing in
             if editing { addressInput = tab.address }
@@ -336,53 +345,152 @@ struct BrowserScreen: View {
     private var returnsToPage: Bool { tab.showingStartPage && !tab.address.isEmpty }
 
     @ToolbarContentBuilder private var browserToolbar: some ToolbarContent {
-        if tab.showingStartPage {
-            ToolbarItem(placement: .topBarLeading) { EditButton().disabled(store.bookmarks.isEmpty) }
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("Settings", systemImage: "gearshape") { showingSettings = true }
+        if usesTopBar {
+            ToolbarItemGroup(placement: .topBarLeading) {
+                backButton
+                forwardButton
+                if tab.showingStartPage { EditButton().disabled(store.bookmarks.isEmpty) }
             }
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("Add Bookmark", systemImage: "plus") { newBookmark() }
+            ToolbarItem(placement: .principal) { addressField }
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                if tab.showingStartPage {
+                    Button("Add Bookmark", systemImage: "plus") { newBookmark() }
+                    Button("Settings", systemImage: "gearshape") { showingSettings = true }
+                } else {
+                    reloadButton
+                    pageInfoButton
+                }
+                bookmarksMenu
+                tabsMenu
             }
-        }
-        ToolbarItemGroup(placement: .bottomBar) {
-            Button("Back", systemImage: "chevron.left") { tab.back() }
-                .disabled(!tab.canGoBack || tab.showingStartPage)
-            Button("Forward", systemImage: "chevron.right") { tab.forward() }
-                .disabled(!tab.canGoForward || tab.showingStartPage)
-            // A plain button (not an inline text field) so it still works when the
-            // system moves the toolbar into the iPhone Duo's side strip.
-            Button("Address", systemImage: tab.address.hasPrefix("https:") ? "lock" : "network") {
-                editingAddress = true
-            }
-            Button(tab.isLoading ? "Stop Loading" : "Reload", systemImage: tab.isLoading ? "xmark" : "arrow.clockwise") {
-                tab.reloadOrStop()
-            }
-            .disabled(tab.showingStartPage || tab.address.isEmpty)
-            Button("Page Info", systemImage: "info.circle") { showingInfo = true }
-                .disabled(tab.showingStartPage || tab.address.isEmpty)
-            // Tap toggles bookmarks; touch and hold offers Add Bookmark, as in Safari.
-            Menu {
-                Button("Add Bookmark", systemImage: "bookmark") { newBookmark() }
-                    .disabled(tab.address.isEmpty)
-            } label: {
-                Label(returnsToPage ? "Return to Page" : "Bookmarks", systemImage: returnsToPage ? "globe" : "book")
-            } primaryAction: {
-                editingAddress = false
-                tab.showingStartPage = !returnsToPage
-            }
-            Menu {
-                Button("New Tab", systemImage: "plus.square.on.square") { session.newTab() }
-                Button("Close Tab", systemImage: "xmark", role: .destructive) { session.close(tab) }
-            } label: {
-                Label("Tabs", systemImage: "square.on.square")
-                    .accessibilityValue("\(session.tabs.count) open")
-            } primaryAction: {
-                Task {
-                    await tab.captureSnapshot()
-                    showingTabs = true
+        } else {
+            if tab.showingStartPage {
+                ToolbarItem(placement: .topBarLeading) { EditButton().disabled(store.bookmarks.isEmpty) }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Settings", systemImage: "gearshape") { showingSettings = true }
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Add Bookmark", systemImage: "plus") { newBookmark() }
                 }
             }
+            ToolbarItemGroup(placement: .bottomBar) {
+                backButton
+                forwardButton
+                // A plain button (not an inline text field) so it still works when the
+                // system moves the toolbar into the iPhone Duo's side strip.
+                Button("Address", systemImage: tab.address.hasPrefix("https:") ? "lock" : "network") {
+                    editingAddress = true
+                }
+                reloadButton
+                pageInfoButton
+                bookmarksMenu
+                tabsMenu
+            }
+        }
+    }
+
+    private var backButton: some View {
+        Button("Back", systemImage: "chevron.left") { tab.back() }
+            .disabled(!tab.canGoBack || tab.showingStartPage)
+    }
+
+    private var forwardButton: some View {
+        Button("Forward", systemImage: "chevron.right") { tab.forward() }
+            .disabled(!tab.canGoForward || tab.showingStartPage)
+    }
+
+    private var reloadButton: some View {
+        Button(tab.isLoading ? "Stop Loading" : "Reload", systemImage: tab.isLoading ? "xmark" : "arrow.clockwise") {
+            tab.reloadOrStop()
+        }
+        .disabled(tab.showingStartPage || tab.address.isEmpty)
+    }
+
+    private var pageInfoButton: some View {
+        Button("Page Info", systemImage: "info.circle") { showingInfo = true }
+            .disabled(tab.showingStartPage || tab.address.isEmpty)
+    }
+
+    /// Tap toggles bookmarks; touch and hold offers Add Bookmark, as in Safari.
+    private var bookmarksMenu: some View {
+        Menu {
+            Button("Add Bookmark", systemImage: "bookmark") { newBookmark() }
+                .disabled(tab.address.isEmpty)
+        } label: {
+            Label(returnsToPage ? "Return to Page" : "Bookmarks", systemImage: returnsToPage ? "globe" : "book")
+        } primaryAction: {
+            editingAddress = false
+            addressFocused = false
+            tab.showingStartPage = !returnsToPage
+        }
+    }
+
+    private var tabsMenu: some View {
+        Menu {
+            Button("New Tab", systemImage: "plus.square.on.square") { session.newTab() }
+            Button("Close Tab", systemImage: "xmark", role: .destructive) { session.close(tab) }
+        } label: {
+            Label("Tabs", systemImage: "square.on.square")
+                .accessibilityValue("\(session.tabs.count) open")
+        } primaryAction: {
+            showTabs()
+        }
+    }
+
+    /// The inline address field of the top bar, used in place of the address sheet.
+    private var addressField: some View {
+        HStack(spacing: 6) {
+            Image(systemName: tab.address.hasPrefix("https:") ? "lock" : "network")
+                .foregroundStyle(.secondary)
+                .accessibilityHidden(true)
+            TextField("Address · httpforever.com", text: $addressInput)
+                .keyboardType(.URL)
+                .textContentType(.URL)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .submitLabel(.go)
+                .focused($addressFocused)
+                .onSubmit { open(addressInput) }
+                .accessibilityLabel("Web address")
+        }
+        .padding(.horizontal, 10).padding(.vertical, 7)
+        .background(.quaternary, in: RoundedRectangle(cornerRadius: 10))
+        .frame(minWidth: 240, idealWidth: 520, maxWidth: 640)
+    }
+
+    private var browserActions: BrowserActions {
+        BrowserActions(
+            enabled: noticeAccepted && sheet == nil && !editingAddress && !showingInfo && !showingSettings && !showingTabs,
+            canGoBack: tab.canGoBack && !tab.showingStartPage,
+            canGoForward: tab.canGoForward && !tab.showingStartPage,
+            hasPage: !tab.showingStartPage && !tab.address.isEmpty,
+            isLoading: tab.isLoading
+        ) { command in perform(command) }
+    }
+
+    private func perform(_ command: BrowserCommand) {
+        switch command {
+        case .openAddress: editAddress()
+        case .newTab: session.newTab()
+        case .closeTab: session.close(tab)
+        case .reload: if !tab.isLoading { tab.reloadOrStop() }
+        case .stop: if tab.isLoading { tab.reloadOrStop() }
+        case .back: tab.back()
+        case .forward: tab.forward()
+        case .addBookmark: newBookmark()
+        case .showTabs: showTabs()
+        case .settings: showingSettings = true
+        }
+    }
+
+    private func editAddress() {
+        if usesTopBar { addressFocused = true } else { editingAddress = true }
+    }
+
+    private func showTabs() {
+        Task {
+            await tab.captureSnapshot()
+            showingTabs = true
         }
     }
 
@@ -390,6 +498,7 @@ struct BrowserScreen: View {
         if session.open(input, newTab: false) {
             addressInput = tab.address
             editingAddress = false
+            addressFocused = false
         }
     }
 
@@ -418,6 +527,40 @@ struct BrowserScreen: View {
         editingAddress = false
         let onPage = !tab.showingStartPage
         sheet = .bookmark(BookmarkDraft(bookmark: Bookmark(title: onPage ? tab.title : "", url: onPage ? tab.address : ""), isNew: true))
+    }
+}
+
+enum BrowserLayout {
+    /// iPad, and the Mac running the iPad app, get a Safari-style top bar at full width. Every iPhone,
+    /// even an unfolded iPhone Duo, keeps the bottom toolbar so the system can move it into the side strip.
+    @MainActor static func usesTopBar(_ sizeClass: UserInterfaceSizeClass?) -> Bool {
+        UIDevice.current.userInterfaceIdiom == .pad && sizeClass == .regular
+    }
+}
+
+enum BrowserCommand {
+    case openAddress, newTab, closeTab, reload, stop, back, forward, addBookmark, showTabs, settings
+}
+
+/// What the menu bar and keyboard shortcuts can do in the browser window right now.
+struct BrowserActions {
+    /// False while a sheet or the tab overview covers the browser.
+    var enabled: Bool
+    var canGoBack: Bool
+    var canGoForward: Bool
+    var hasPage: Bool
+    var isLoading: Bool
+    var perform: @MainActor (BrowserCommand) -> Void
+}
+
+private struct BrowserActionsKey: FocusedValueKey {
+    typealias Value = BrowserActions
+}
+
+extension FocusedValues {
+    var browserActions: BrowserActions? {
+        get { self[BrowserActionsKey.self] }
+        set { self[BrowserActionsKey.self] = newValue }
     }
 }
 

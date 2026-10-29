@@ -64,7 +64,7 @@ struct SettingsView: View {
                     Button("Reset Device Names", role: .destructive) { confirmingReset = true }
                         .disabled(devices.records.isEmpty)
                 } header: { Text("Local Network") } footer: {
-                    Text("Off by default. When on, LAN Browser scans once for web apps advertised with Bonjour, then only when you ask, and checks whether your bookmarks are reachable while the bookmark list is open. A port scan also finds web apps that don’t advertise themselves; it is off until you review and confirm the ports and addresses, and runs only when you scan. iOS asks for Local Network access. Nothing is sent to the developer or anyone else.")
+                    Text("Off by default. When on, LAN Browser scans once for web apps advertised with Bonjour, then only when you ask, and checks whether your bookmarks are reachable while the bookmark list is open. A port scan also finds web apps that don’t advertise themselves; it is off until you review and confirm the ports and addresses, and runs only when you scan. You’re asked to allow Local Network access. Nothing is sent to the developer or anyone else.")
                 }
 
                 Section {

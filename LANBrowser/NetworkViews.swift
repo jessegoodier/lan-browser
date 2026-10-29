@@ -4,6 +4,14 @@ import UIKit
 // Explicit wrapper name avoids the SDK’s same-named State macro.
 private typealias ViewState<Value> = SwiftUI.State<Value>
 
+extension HostDevice {
+    /// The Mac reports the iPad idiom when it runs the iPad app, so check for it first.
+    @MainActor static var current: HostDevice {
+        if ProcessInfo.processInfo.isiOSAppOnMac { return .mac }
+        return UIDevice.current.userInterfaceIdiom == .pad ? .iPad : .iPhone
+    }
+}
+
 struct LocalNetworkCard: View {
     let turnOn: () -> Void
     let notNow: () -> Void
@@ -12,7 +20,7 @@ struct LocalNetworkCard: View {
         VStack(alignment: .leading, spacing: 10) {
             Label("Find devices on this network", systemImage: "antenna.radiowaves.left.and.right")
                 .font(.headline)
-            Text("Lists web apps such as Plex and Home Assistant, and shows which bookmarks are reachable. iOS will ask to allow Local Network access. Nothing is sent outside your network.")
+            Text("Lists web apps such as Plex and Home Assistant, and shows which bookmarks are reachable. You’ll be asked to allow Local Network access. Nothing is sent outside your network.")
                 .font(.subheadline).foregroundStyle(.secondary)
             HStack {
                 Spacer()
@@ -49,7 +57,12 @@ struct DiscoveredSection: View {
                 if network.accessDenied {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Local Network access is off for LAN Browser.").font(.subheadline)
-                        Button("Open Settings") { openURL(URL(string: UIApplication.openSettingsURLString)!) }
+                        if HostDevice.current == .mac {
+                            Text("Turn it on in System Settings › Privacy & Security › Local Network.")
+                                .font(.footnote).foregroundStyle(.secondary)
+                        } else {
+                            Button("Open Settings") { openURL(URL(string: UIApplication.openSettingsURLString)!) }
+                        }
                     }
                 }
                 ForEach(services) { service in
@@ -168,7 +181,7 @@ struct DiscoveredSection: View {
 struct PortScanConfirmationSheet: View {
     @Environment(\.dismiss) private var dismiss
     let preset: PortScanPreset
-    /// Nil when the phone isn’t on Wi-Fi or Ethernet, so there is no network to describe.
+    /// Nil when this device isn’t on Wi-Fi or Ethernet, so there is no network to describe.
     let plan: PortScanPlan?
     let confirm: (PortScanPlan) -> Void
 
@@ -180,7 +193,7 @@ struct PortScanConfirmationSheet: View {
                         LabeledContent("Range", value: plan.range.description)
                         LabeledContent("Addresses", value: plan.addressCount.formatted())
                     } header: { Text("Addresses") } footer: {
-                        Text("Your network, \(plan.range.cidr). This iPhone (\(plan.deviceIP)) is skipped.")
+                        Text("Your network, \(plan.range.cidr). This \(HostDevice.current.rawValue) (\(plan.deviceIP)) is skipped.")
                     }
                     Section("Ports · \(preset.title)") {
                         LazyVGrid(columns: [GridItem(.adaptive(minimum: 64), spacing: 8)], alignment: .leading, spacing: 8) {
@@ -419,7 +432,7 @@ struct DiagnosticsView: View {
     @Environment(\.openURL) private var openURL
 
     init(url: URL) {
-        _diagnostics = StateObject(wrappedValue: ConnectionDiagnostics(url: url))
+        _diagnostics = StateObject(wrappedValue: ConnectionDiagnostics(url: url, device: .current))
     }
 
     var body: some View {
@@ -441,7 +454,8 @@ struct DiagnosticsView: View {
                         }
                         if let advice = step.advice {
                             Text(advice).font(.callout).padding(.leading, 30)
-                            if step.kind == .permission && step.status == .failed {
+                            // The advice names the System Settings path on a Mac, where this URL doesn’t reach it.
+                            if step.kind == .permission && step.status == .failed && diagnostics.device != .mac {
                                 Button("Open Settings") { openURL(URL(string: UIApplication.openSettingsURLString)!) }
                                     .padding(.leading, 30)
                             }
