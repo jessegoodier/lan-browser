@@ -16,6 +16,7 @@ struct SettingsView: View {
     @ViewState private var confirmingReset = false
     @ViewState private var clearing = false
     @ViewState private var cleared = false
+    @ViewState private var reviewingPreset: PortScanPreset?
 
     private var version: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "—"
@@ -43,12 +44,27 @@ struct SettingsView: View {
                             LabeledContent("Last Scan", value: lastScan.formatted(date: .abbreviated, time: .shortened))
                         }
                     }
+                    if network.isEnabled {
+                        Picker("Port Scan", selection: Binding(
+                            get: { network.portScanPreset },
+                            set: { preset in
+                                // Nothing changes until the user has seen the ports and range and confirmed.
+                                if preset == .off { network.turnOffPortScan() } else { reviewingPreset = preset }
+                            }
+                        )) {
+                            ForEach(PortScanPreset.allCases) { Text("\($0.title) (\($0.summary))").tag($0) }
+                        }
+                        if network.portScanPreset != .off {
+                            Text("Scans ports \(network.portScanPreset.ports.map(String.init).joined(separator: ", ")) when you tap Scan Again.")
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
                     Button("Clear Discovered Services", role: .destructive) { network.clearResults() }
                         .disabled(network.lastScan == nil && network.services.isEmpty)
                     Button("Reset Device Names", role: .destructive) { confirmingReset = true }
                         .disabled(devices.records.isEmpty)
                 } header: { Text("Local Network") } footer: {
-                    Text("Off by default. When on, LAN Browser scans once for web apps advertised with Bonjour, then only when you ask, and checks whether your bookmarks are reachable while the bookmark list is open. iOS asks for Local Network access. Nothing is sent to the developer or anyone else.")
+                    Text("Off by default. When on, LAN Browser scans once for web apps advertised with Bonjour, then only when you ask, and checks whether your bookmarks are reachable while the bookmark list is open. A port scan also finds web apps that don’t advertise themselves; it is off until you review and confirm the ports and addresses, and runs only when you scan. iOS asks for Local Network access. Nothing is sent to the developer or anyone else.")
                 }
 
                 Section {
@@ -84,6 +100,9 @@ struct SettingsView: View {
                     }
                 }
             } message: { Text("You’ll be signed out of websites, and all tabs will close. Bookmarks and exported downloads are kept.") }
+            .sheet(item: $reviewingPreset) { preset in
+                PortScanConfirmationSheet(preset: preset, plan: network.plan(for: preset)) { network.confirm($0) }
+            }
             .confirmationDialog("Reset all device names?", isPresented: $confirmingReset, titleVisibility: .visible) {
                 Button("Reset Device Names", role: .destructive) { devices.resetAll() }
             } message: { Text("Custom names, remembered IP addresses and looked-up host names are forgotten. Bookmarks are kept.") }
@@ -91,12 +110,41 @@ struct SettingsView: View {
     }
 }
 
+/// Shown once, before first use, and repeated at the top of the help page.
+struct TrustedNetworkNotice: View {
+    static let acceptedKey = "trustedNetworkNoticeAccepted"
+    static let summary = "LAN Browser is intended exclusively for use on trusted home networks. It isn’t meant for browsing websites that are expected to be secure, such as banking, email or shopping."
+    static let details = "To reach home devices it loads plain HTTP pages, and it opens devices on your network even when their certificates aren’t trusted. When you’re on a network you don’t trust, use Safari."
+
+    let accept: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            Image(systemName: "house.fill").font(.system(size: 44)).foregroundStyle(.tint)
+            Text("For Trusted Home Networks").font(.title.bold())
+            Text(Self.summary).font(.body)
+            Text(Self.details).font(.body).foregroundStyle(.secondary)
+            Spacer()
+            Button(action: accept) {
+                Text("I Understand").font(.headline).frame(maxWidth: .infinity).padding(.vertical, 6)
+            }
+            .buttonStyle(.borderedProminent)
+        }
+        .padding(24)
+        .interactiveDismissDisabled()
+    }
+}
+
 private struct HelpView: View {
     var body: some View {
         List {
+            Section {
+                Text(TrustedNetworkNotice.summary).bold()
+                Text(TrustedNetworkNotice.details)
+            }
             Text("Save home-server addresses and open Wi-Fi sign-in pages. Addresses without a scheme use HTTP. HTTP traffic is not encrypted; use HTTPS when your service supports it.")
             Text("On public Wi-Fi, open the HTTP Forever bookmark to request the network’s sign-in page. A portal appears only when that network requires sign-in.")
-            Text("For home services, use the same Wi-Fi network as your server and enter its hostname or IP address and port. LAN Browser does not bypass certificate errors.")
+            Text("For home services, use the same Wi-Fi network as your server and enter its hostname or IP address and port. Devices on your network with self-signed or otherwise untrusted certificates open anyway, marked with a red “!” you can tap to see the certificate; internet sites with invalid certificates are still blocked.")
             Text("Bookmarks open in a new tab unless the current tab is blank; change this in Settings. Touch and hold a bookmark to open it the other way. Tap the tabs button to switch tabs, or touch and hold it for New Tab and Close Tab. Touch and hold the bookmarks button to bookmark the current page.")
             Text("If a page won’t load, use Diagnose on the error screen, Why Can’t I Connect? in Page Info, or touch and hold a bookmark and choose Check Connection. Choose Rename Device… there, or use the Device section in Page Info, to give a device a friendly name.")
         }

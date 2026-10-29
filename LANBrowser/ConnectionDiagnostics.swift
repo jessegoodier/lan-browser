@@ -79,14 +79,25 @@ final class ConnectionDiagnostics: ObservableObject {
         }
 
         update(.http, .running, target.secure ? "Requesting over HTTPS…" : "Requesting over HTTP…")
-        let http = await NetworkProbe.http(target)
+        let hops = await NetworkProbe.follow(target)
+        // Each redirect is listed, then what the final page answered.
+        var lines = hops.dropLast().map { hop in
+            "\(hop.result.statusCode.map { "HTTP " + HTTPStatus.line($0) } ?? "No response") → \(hop.result.location ?? "")"
+        }
+        let http = hops.last?.result ?? NetworkProbe.HTTPResult(failure: .noHTTPResponse)
         var parts: [String] = []
-        if let code = http.statusCode { parts.append("HTTP \(code)") }
+        if let code = http.statusCode { parts.append("HTTP \(HTTPStatus.line(code))") }
+        if let title = http.title { parts.append(title) }
         if let server = http.server { parts.append(server) }
         if let trusted = http.certificateTrusted { parts.append(trusted ? "Certificate trusted" : "Certificate not trusted") }
-        let detail = parts.isEmpty ? "No web response" : parts.joined(separator: " · ")
-        if let failure = http.failure {
-            update(.http, .failed, detail, advice: DiagnosticsText.advice(for: failure, target: target))
+        lines.append(parts.isEmpty ? "No web response" : parts.joined(separator: " · "))
+        if hops.count > 1, let finalURL = hops.last?.url { lines.append("Final page: \(finalURL.absoluteString)") }
+        let detail = lines.joined(separator: "\n")
+        let finalTarget = hops.last.flatMap { DiagnosticTarget(url: $0.url) } ?? target
+        if Redirects.next(from: hops.last?.url ?? target.url, status: http.statusCode, location: http.location) != nil {
+            update(.http, .warning, detail, advice: "The page kept redirecting, so LAN Browser stopped after \(Redirects.limit) redirects. The server’s settings may send it in a loop.")
+        } else if let failure = http.failure {
+            update(.http, .failed, detail, advice: DiagnosticsText.advice(for: failure, target: finalTarget))
         } else if http.certificateTrusted == false {
             update(.http, .warning, detail, advice: DiagnosticsText.untrustedCertificate)
         } else {

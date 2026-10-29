@@ -15,6 +15,8 @@ enum NetworkProbe {
         var statusCode: Int?
         var server: String?
         var certificateTrusted: Bool?
+        var title: String?
+        var location: String?
     }
 
     struct NetworkSnapshot: Sendable {
@@ -77,7 +79,8 @@ enum NetworkProbe {
                     connection.receive(minimumIncompleteLength: 1, maximumLength: 16_384) { data, _, _, _ in
                         let text = data.flatMap { String(data: $0, encoding: .utf8) ?? String(data: $0, encoding: .isoLatin1) } ?? ""
                         guard let code = DiagnosticsText.statusCode(in: text) else { once.resume(HTTPResult(failure: .noHTTPResponse)); return }
-                        once.resume(HTTPResult(statusCode: code, server: DiagnosticsText.header("Server", in: text)))
+                        once.resume(HTTPResult(statusCode: code, server: DiagnosticsText.header("Server", in: text), title: DiagnosticsText.htmlTitle(in: text),
+                                               location: DiagnosticsText.header("Location", in: text)))
                     }
                 case .waiting(let error), .failed(let error):
                     if case .tls = error { once.resume(HTTPResult(failure: .secureConnectionFailed)); return }
@@ -131,6 +134,42 @@ enum NetworkProbe {
             return Sighting(hostname: reverseLookup ? await hostname(for: host) : nil)
         }
         return Sighting(address: await displayAddress(for: host))
+    }
+
+    /// Requests a page and follows its redirects like a browser, up to `Redirects.limit`,
+    /// returning every hop so the whole chain can be shown.
+    static func follow(_ target: DiagnosticTarget, timeout: TimeInterval = 5) async -> [(url: URL, result: HTTPResult)] {
+        var hops: [(url: URL, result: HTTPResult)] = []
+        var next: URL? = target.url
+        while let url = next, hops.count <= Redirects.limit, let hopTarget = DiagnosticTarget(url: url) {
+            let result = await http(hopTarget, timeout: timeout)
+            hops.append((url, result))
+            next = Redirects.next(from: url, status: result.statusCode, location: result.location)
+            if let next, hops.contains(where: { $0.url == next }) { break }
+        }
+        return hops
+    }
+
+    /// Whether an open port serves a web page, trying the scheme it most likely speaks first.
+    /// Any HTTP status counts, since a login page or 404 still means a web app is there.
+    static func webEndpoint(host: String, port: Int) async -> WebFinding? {
+        for scheme in PortScan.prefersHTTPS(port: port) ? ["https", "http"] : ["http", "https"] {
+            var components = URLComponents()
+            components.scheme = scheme
+            components.host = host
+            if port != (scheme == "https" ? 443 : 80) { components.port = port }
+            components.path = "/"
+            guard let url = components.url, let target = DiagnosticTarget(url: url) else { continue }
+            let hops = await follow(target, timeout: 3)
+            if let first = hops.first?.result, let status = first.statusCode {
+                // Name the row from the page the redirects end on, not the placeholder page.
+                let final = hops.last?.result
+                let title = hops.count > 1 ? final?.title : first.title
+                return WebFinding(host: host, port: port, url: url, status: status, title: title,
+                                  server: first.server ?? final?.server, location: first.location)
+            }
+        }
+        return nil
     }
 
     /// The address to show beside a host name, preferring IPv4 over long IPv6 forms.
@@ -209,7 +248,7 @@ enum NetworkProbe {
         )
     }
 
-    private static func ipv4Address(of interface: String) -> String? {
+    nonisolated static func ipv4Address(of interface: String) -> String? {
         var list: UnsafeMutablePointer<ifaddrs>?
         guard getifaddrs(&list) == 0 else { return nil }
         defer { freeifaddrs(list) }

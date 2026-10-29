@@ -138,6 +138,8 @@ struct PageInfo {
     let certificateSubject: String?
     let certificateIssuer: String?
     let certificateTrusted: Bool?
+    let response: PageResponse?
+    let certificateIssue: CertificateIssue?
 }
 
 /// App-level browser state: the open tabs, downloads and the export queue.

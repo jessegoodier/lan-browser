@@ -27,6 +27,8 @@
 		0000000000000000000000DA /* TabViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000076 /* TabViews.swift */; };
 		0000000000000000000000DB /* DiscoveryCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000077 /* DiscoveryCache.swift */; };
 		0000000000000000000000DC /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000078 /* SettingsView.swift */; };
+		0000000000000000000000DD /* PortScan.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000079 /* PortScan.swift */; };
+		0000000000000000000000DE /* Certificates.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000007A /* Certificates.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -52,6 +54,8 @@
 		000000000000000000000076 /* TabViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabViews.swift; sourceTree = "<group>"; };
 		000000000000000000000077 /* DiscoveryCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoveryCache.swift; sourceTree = "<group>"; };
 		000000000000000000000078 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		000000000000000000000079 /* PortScan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortScan.swift; sourceTree = "<group>"; };
+		00000000000000000000007A /* Certificates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Certificates.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -91,6 +95,8 @@
 				000000000000000000000076 /* TabViews.swift */,
 				000000000000000000000077 /* DiscoveryCache.swift */,
 				000000000000000000000078 /* SettingsView.swift */,
+				000000000000000000000079 /* PortScan.swift */,
+				00000000000000000000007A /* Certificates.swift */,
 				000000000000000000000069 /* Assets.xcassets */,
 				00000000000000000000006A /* Info.plist */,
 				00000000000000000000006B /* PrivacyInfo.xcprivacy */,
@@ -189,6 +195,8 @@
 				0000000000000000000000DA /* TabViews.swift in Sources */,
 				0000000000000000000000DB /* DiscoveryCache.swift in Sources */,
 				0000000000000000000000DC /* SettingsView.swift in Sources */,
+				0000000000000000000000DD /* PortScan.swift in Sources */,
+				0000000000000000000000DE /* Certificates.swift in Sources */,
 			);
 		};
 /* End PBXSourcesBuildPhase section */

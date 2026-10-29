@@ -6,6 +6,8 @@ struct DiscoveryScan: Codable, Equatable {
     /// Fingerprint of the network the scan ran on, used to say when results may be stale.
     var network: String?
     var services: [DiscoveredService]
+    /// The port-scan preset this scan used; nil for Bonjour only.
+    var ports: PortScanPreset? = nil
 }
 
 struct DiscoveryCache {

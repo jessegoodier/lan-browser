@@ -15,9 +15,13 @@ private enum BrowserSheet: Identifiable {
     case bookmark(BookmarkDraft)
     case download(DownloadExport)
     case diagnostics(DiagnosticsTarget)
+    case response(PageResponse)
+    case certificate(CertificateIssue)
 
     var id: UUID {
         switch self {
+        case .response(let response): return response.id
+        case .certificate(let issue): return issue.id
         case .bookmark(let draft): return draft.id
         case .download(let export): return export.id
         case .diagnostics(let target): return target.id
@@ -32,6 +36,7 @@ struct BrowserScreen: View {
     @StateObject private var network: LocalNetwork
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage(OpenBookmarksIn.defaultsKey) private var openPreference = OpenBookmarksIn.newTab
+    @AppStorage(TrustedNetworkNotice.acceptedKey) private var noticeAccepted = false
     @ViewState private var renaming: DeviceRename?
     @ViewState private var addressInput = ""
     @ViewState private var sheet: BrowserSheet?
@@ -41,6 +46,7 @@ struct BrowserScreen: View {
     @ViewState private var bookmarkAfterInfo = false
     @ViewState private var showingSettings = false
     @ViewState private var showingTabs = false
+    @ViewState private var hiddenResponse: UUID?
 
     init() {
         let devices = DeviceStore()
@@ -55,20 +61,30 @@ struct BrowserScreen: View {
         // foldable iPhone Duo the system can move them into the side strip, as Safari does.
         NavigationStack {
             ZStack {
-                BrowserWebView(webView: tab.webView)
-                    .id(tab.id)
-                    .opacity(tab.showingStartPage ? 0 : 1)
-                    .allowsHitTesting(!tab.showingStartPage && tab.pageError == nil)
-                    .accessibilityHidden(tab.showingStartPage || tab.pageError != nil)
+                // The response strip sits above the page rather than over it, so it never hides content.
+                VStack(spacing: 0) {
+                    if let issue = tab.certificateIssue {
+                        CertificateStrip(issue: issue) { sheet = .certificate(issue) }
+                    }
+                    responseBanner
+                    BrowserWebView(webView: tab.webView)
+                        .id(tab.id)
+                }
+                .opacity(tab.showingStartPage ? 0 : 1)
+                .allowsHitTesting(!tab.showingStartPage && tab.pageError == nil)
+                .accessibilityHidden(tab.showingStartPage || tab.pageError != nil)
                 if tab.showingStartPage {
                     bookmarksHome
                 } else if let error = tab.pageError {
                     ContentUnavailableView {
-                        Label("Page unavailable", systemImage: "wifi.exclamationmark")
+                        // When the server did answer, its status is the headline, not a generic failure.
+                        Label(tab.errorResponse.map { "HTTP \($0.statusLine)" } ?? "Page unavailable",
+                              systemImage: tab.errorResponse == nil ? "wifi.exclamationmark" : "exclamationmark.triangle")
                     } description: {
-                        Text(error)
+                        Text(error).textSelection(.enabled)
                     } actions: {
                         Button("Retry") { tab.retry() }.buttonStyle(.borderedProminent)
+                        if let response = tab.response { Button("Response Details") { sheet = .response(response) } }
                         if let url = URL(string: tab.address), DiagnosticTarget(url: url) != nil {
                             Button("Diagnose") { sheet = .diagnostics(DiagnosticsTarget(url: url)) }
                         }
@@ -99,6 +115,9 @@ struct BrowserScreen: View {
             if phase == .background { session.saveTabs() }
         }
         .onChange(of: store.bookmarks) { _, bookmarks in network.bookmarksChanged(bookmarks) }
+        .sheet(isPresented: Binding(get: { !noticeAccepted }, set: { _ in })) {
+            TrustedNetworkNotice { noticeAccepted = true }
+        }
         .sheet(isPresented: $editingAddress) {
             AddressEntry(text: $addressInput) { open(addressInput) }
         }
@@ -158,6 +177,18 @@ struct BrowserScreen: View {
                     .interactiveDismissDisabled()
             case .diagnostics(let target):
                 DiagnosticsSheet(url: target.url)
+            case .certificate(let issue):
+                NavigationStack {
+                    CertificateDetailsView(issue: issue)
+                        .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { sheet = nil } } }
+                }
+                .presentationDetents([.medium, .large])
+            case .response(let response):
+                NavigationStack {
+                    ResponseDetailsView(response: response)
+                        .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { sheet = nil } } }
+                }
+                .presentationDetents([.medium, .large])
             }
         }
         .alert("LAN Browser", isPresented: Binding(
@@ -272,6 +303,20 @@ struct BrowserScreen: View {
         if tab.isLoading && !tab.showingStartPage {
             ProgressView(value: tab.progress).tint(.blue)
                 .accessibilityLabel("Page loading")
+        }
+    }
+
+    /// Any main-page answer other than 200 is shown, since an error page can be blank.
+    @ViewBuilder private var responseBanner: some View {
+        if !tab.showingStartPage, tab.pageError == nil, let response = tab.response,
+           response.statusCode != 200, response.id != hiddenResponse {
+            ResponseBanner(response: response) {
+                sheet = .response(response)
+            } diagnose: {
+                if let url = URL(string: response.url) { sheet = .diagnostics(DiagnosticsTarget(url: url)) }
+            } dismiss: {
+                hiddenResponse = response.id
+            }
         }
     }
 
@@ -436,6 +481,7 @@ private struct PageInfoSheet: View {
     }
 
     private var connection: (text: String, symbol: String, color: Color) {
+        if info.certificateIssue != nil { return ("Encrypted (HTTPS), but the certificate isn’t trusted", "exclamationmark.circle.fill", .red) }
         if info.isFullySecure { return ("Encrypted (HTTPS)", "lock.fill", .green) }
         if info.isEncrypted { return ("HTTPS with insecure content on the page", "lock.trianglebadge.exclamationmark", .orange) }
         return ("Not encrypted (HTTP). Traffic on your network can be read.", "lock.open.fill", .orange)
@@ -464,6 +510,16 @@ private struct PageInfoSheet: View {
                     }
                     Button("Add Bookmark", systemImage: "bookmark", action: addBookmark)
                 }
+                if let response = info.response {
+                    Section("Response") {
+                        LabeledContent("Status") { Text(response.statusLine).monospaced() }
+                        LabeledContent("Method", value: response.method)
+                        if let type = response.header("Content-Type") { LabeledContent("Content-Type", value: type) }
+                        if let length = response.header("Content-Length") { LabeledContent("Content-Length", value: length) }
+                        if let server = response.header("Server") { LabeledContent("Server", value: server) }
+                        NavigationLink("All Response Headers (\(response.headers.count))") { ResponseDetailsView(response: response) }
+                    }
+                }
                 Section("Connection") {
                     Label(connection.text, systemImage: connection.symbol).foregroundStyle(connection.color)
                     if let trusted = info.certificateTrusted {
@@ -471,6 +527,9 @@ private struct PageInfoSheet: View {
                     }
                     if let subject = info.certificateSubject { LabeledContent("Issued to", value: subject) }
                     if let issuer = info.certificateIssuer { LabeledContent("Issued by", value: issuer) }
+                    if let issue = info.certificateIssue {
+                        NavigationLink("Show Certificate") { CertificateDetailsView(issue: issue) }
+                    }
                 }
                 Section("Page") {
                     if !info.title.isEmpty { LabeledContent("Title", value: info.title) }

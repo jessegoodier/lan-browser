@@ -7,7 +7,13 @@ struct DiscoveredService: Identifiable, Codable, Equatable, Sendable {
     let url: URL
     /// The IP the host name resolved to, shown beside the device name.
     var address: String?
+    /// Nil in scans saved before port scanning existed, which were all Bonjour.
+    var foundBy: Source? = nil
     var id: String { url.absoluteString }
+
+    enum Source: String, Codable, Sendable {
+        case bonjour, portScan
+    }
 }
 
 enum ServiceCatalog {
@@ -79,6 +85,20 @@ enum ServiceCatalog {
         return best.values.sorted {
             $0.name.localizedStandardCompare($1.name) == .orderedAscending
         }
+    }
+
+    /// Bonjour results plus port-scan finds at addresses and ports Bonjour didn’t already cover.
+    static func mergedWithScan(bonjour: [DiscoveredService], scanned: [DiscoveredService]) -> [DiscoveredService] {
+        let named = merged(bonjour)
+        var taken = Set(named.flatMap { endpointKeys(for: $0.url, address: $0.address) })
+        var extra: [DiscoveredService] = []
+        for service in scanned {
+            let keys = endpointKeys(for: service.url, address: service.address)
+            guard !keys.contains(where: taken.contains) else { continue }
+            taken.formUnion(keys)
+            extra.append(service)
+        }
+        return (named + extra).sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
     }
 
     /// Private, link-local and mDNS addresses, plus single-label names resolved by the router.
