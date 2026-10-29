@@ -1,0 +1,131 @@
+LANBrowser/ConnectionDiagnostics.swift
+  s_df282fcf9ae99d::t_4a3705ef3e9a0e 82-87,89-90,93-100
+LANBrowser/PortScan.swift
+  s_df282fcf9ae99d::t_4a3705ef3e9a0e 139-140,142
+  s_df282fcf9ae99d::t_b3a9d7fd61a7b8 1-101,115-116,146-149
+  s_df282fcf9ae99d::t_3bb0bd58272a6c 102-114,117-138,141,143-145
+Scripts/check.sh
+  s_df282fcf9ae99d::t_902bad7ac322a3 8-9
+LANBrowser/NetworkProbe.swift
+  s_df282fcf9ae99d::t_3bb0bd58272a6c 19,82-83,155,170
+  s_df282fcf9ae99d::t_7d1f1b79d56577 18,153-154,156-162,171-174,251
+  s_df282fcf9ae99d::t_4a3705ef3e9a0e 139-152,163-169
+LANBrowser/ServiceCatalog.swift
+  s_df282fcf9ae99d::t_902bad7ac322a3 10-11,13-16,90-102
+  s_df282fcf9ae99d::t_512584abd49703 103
+LANBrowser/LocalNetwork.swift
+  s_df282fcf9ae99d::t_3bb0bd58272a6c 54,456,475-476,481,486-490,493,495,497-503
+  s_df282fcf9ae99d::t_e521628457b8a4 477-480,485
+  s_df282fcf9ae99d::t_5627746bd5dc18 298-302
+  s_df282fcf9ae99d::t_8c159810f031db 34-46,74-78,86,129-131,134-141,147-177,182,184-185,198,224,236-237,243-244,263-266,303-309,312,364,378,384,389-390,437-455,457-474,482-484,491-492,494,496,504-530
+  s_df282fcf9ae99d::t_4e2932cc1ca34a 531
+Tests/CoreChecks.swift
+  s_df282fcf9ae99d::t_f08bc4671856f1 195-212
+  s_df282fcf9ae99d::t_cad8e3afca9446 218
+  s_df282fcf9ae99d::t_1d4cebac3f68c2 213-217,219-220
+  s_df282fcf9ae99d::t_4b6c67b5b44408 107-111
+  s_df282fcf9ae99d::t_5626362e4da6fc 176-194,223-225
+  s_df282fcf9ae99d::t_3e9b31403e603c 221-222
+AGENTS.md
+  s_df282fcf9ae99d::t_1ec7d1ce0cce28 7
+  s_df282fcf9ae99d::t_99cd5eb90f41a4 72
+  s_df282fcf9ae99d::t_63622ac0fa5dc4 69-70
+  s_df282fcf9ae99d::t_70bd887b1fc7f6 74
+  s_df282fcf9ae99d::t_2b72a8a421eb6d 80
+  s_df282fcf9ae99d::t_cd3a5a8837b991 28-29
+  s_df282fcf9ae99d::t_bed0ce2ca1918a 33
+  s_df282fcf9ae99d::t_55aebbb692e30f 26-27
+  s_df282fcf9ae99d::t_1baabb9ac97f79 58
+LANBrowser/Certificates.swift
+  s_df282fcf9ae99d::t_cb96c28511bec2 1-76
+LANBrowser/privacy_policy.md
+  s_df282fcf9ae99d::t_d140b9ee4ed6ed 8
+  s_df282fcf9ae99d::t_83f289b4617595 20
+LANBrowser/DiagnosticsLogic.swift
+  s_df282fcf9ae99d::t_ef9e393bd13254 153-174,182-211,223-233
+  s_df282fcf9ae99d::t_cad8e3afca9446 175-181
+  s_df282fcf9ae99d::t_3e9b31403e603c 234-249
+  s_df282fcf9ae99d::t_4a3705ef3e9a0e 56-61,212-222
+  s_df282fcf9ae99d::t_808a7300750e24 103
+  s_df282fcf9ae99d::t_902bad7ac322a3 112-124
+  s_df282fcf9ae99d::t_a2ba5959fcb7b3 47,52
+LANBrowser/BrowserTab.swift
+  s_df282fcf9ae99d::t_bb948ef48a621b 83-85
+  s_df282fcf9ae99d::t_808a7300750e24 22-23,86-91,155-156,280-298
+  s_df282fcf9ae99d::t_cad8e3afca9446 243,246-254
+  s_df282fcf9ae99d::t_ef9e393bd13254 20-21,24,154,205-209,233,240-242,244-245,255-256,261
+  s_df282fcf9ae99d::t_3e9b31403e603c 224-230
+LANBrowser/BrowserModel.swift
+  s_df282fcf9ae99d::t_ef9e393bd13254 141
+  s_df282fcf9ae99d::t_808a7300750e24 142
+LANBrowser/DiscoveryCache.swift
+  s_df282fcf9ae99d::t_7d1f1b79d56577 9-10
+README.md
+  s_df282fcf9ae99d::t_546fca757c2818 35
+  s_df282fcf9ae99d::t_6b8ac99e876d1c 117
+  s_df282fcf9ae99d::t_f2055b9b687e78 173
+  s_df282fcf9ae99d::t_8bb151c192e37a 83
+  s_df282fcf9ae99d::t_458b36f0e741d2 44
+  s_df282fcf9ae99d::t_8f6da01de81bed 143-146
+  s_df282fcf9ae99d::t_bf55517a8acce0 38
+  s_df282fcf9ae99d::t_7a00701f62fa40 148-150
+  s_df282fcf9ae99d::t_5bd4fcfccc7310 47
+  s_df282fcf9ae99d::t_7662d8901018ac 37,40
+  s_df282fcf9ae99d::t_1767afa09d5083 7-8
+  s_df282fcf9ae99d::t_48e32cd9e4c7c5 169
+  s_df282fcf9ae99d::t_e23d5d7919adcb 42,45-46
+  s_df282fcf9ae99d::t_ef1dd105c68517 51
+  s_df282fcf9ae99d::t_5bc32aa72c43ef 171
+  s_df282fcf9ae99d::t_f8a280f1063694 59
+  s_df282fcf9ae99d::t_49f3b0f334a733 39
+  s_df282fcf9ae99d::t_12b0d4a78f5e13 41
+LANBrowser.xcodeproj/project.pbxproj
+  s_df282fcf9ae99d::t_32f63e90ec3f0a 30,57,98,198
+  s_df282fcf9ae99d::t_f80439a31570df 31,58,99,199
+LANBrowser/Info.plist
+  s_df282fcf9ae99d::t_debe744b644d69 45
+LANBrowser/NetworkViews.swift
+  s_df282fcf9ae99d::t_3b627ec61d575f 217-218,299-322,327-368
+  s_df282fcf9ae99d::t_5627746bd5dc18 38,61-68,109-114,119-133,137,139-146,167-216
+  s_df282fcf9ae99d::t_65d062b55c4e4d 298,323-326
+  s_df282fcf9ae99d::t_f80439a31570df 220-297
+  s_df282fcf9ae99d::t_b03a09079a3ff3 219
+LANBrowser/SettingsView.swift
+  s_df282fcf9ae99d::t_2a7f7d07abee6f 123
+  s_df282fcf9ae99d::t_5e90d42f2ec5df 113-122,124-137,141-144
+  s_df282fcf9ae99d::t_5627746bd5dc18 19,47-61,67,103-105
+  s_df282fcf9ae99d::t_f80439a31570df 147
+SUPPORT.md
+  s_df282fcf9ae99d::t_ec281c0180ebce 17
+  s_df282fcf9ae99d::t_50eca3628cd446 11
+LANBrowser/BrowserScreen.swift
+  s_df282fcf9ae99d::t_cad8e3afca9446 80,87
+  s_df282fcf9ae99d::t_65d062b55c4e4d 64-65,69-75
+  s_df282fcf9ae99d::t_5e90d42f2ec5df 39,118-120,320
+  s_df282fcf9ae99d::t_bb948ef48a621b 81-82
+  s_df282fcf9ae99d::t_44bc5b33609ce1 84
+  s_df282fcf9ae99d::t_f80439a31570df 19,24,66-68,180-185,484,530-532
+  s_df282fcf9ae99d::t_3b627ec61d575f 18,23,49,186-191,309-319,513-522
+  s_df282fcf9ae99d::t_e9f9ee1b231f44 321-322
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "bd2e184e608b1720b6c911b255b1b773fb212bd4",
+  "prompts": {},
+  "humans": {
+    "h_cca6aa2712613d": {
+      "author": "jesse goodier <31039225+jessegoodier@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_df282fcf9ae99d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7f724492-7d77-4b2c-815a-d87a3916d5b4",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "jesse goodier <31039225+jessegoodier@users.noreply.github.com>"
+    }
+  }
+}
