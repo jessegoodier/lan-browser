@@ -193,7 +193,7 @@ enum NetworkProbe {
         }.value
     }
 
-    /// Bonjour’s SRV record names the device (e.g. `omarchy.local`), which NWBrowser doesn’t expose.
+    /// Bonjour’s SRV record names the device (e.g. `studio.local`), which NWBrowser doesn’t expose.
     static func resolveService(name: String, type: String, domain: String, interfaceIndex: UInt32, timeout: TimeInterval = 5) async -> (host: String, port: Int)? {
         let once = Once<(String, Int)?>()
         let context = Unmanaged.passRetained(once)

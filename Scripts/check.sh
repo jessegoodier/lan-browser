@@ -10,3 +10,4 @@ xcrun swiftc -swift-version 5 -strict-concurrency=complete \
   -o build/checks/core-checks
 build/checks/core-checks "$(plutil -extract NSBonjourServices json -o - LANBrowser/Info.plist)"
 plutil -lint LANBrowser/Info.plist LANBrowser/PrivacyInfo.xcprivacy LANBrowser.xcodeproj/project.pbxproj
+Scripts/policy_check.sh

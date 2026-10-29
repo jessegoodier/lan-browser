@@ -1,0 +1,52 @@
+name: Bug report
+description: Report something in LAN Browser that isn’t working
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Issues are public. Don’t include passwords, private addresses or browsing history.
+
+        To report a security vulnerability, don’t open an issue. Use the private form described in [SECURITY.md](https://github.com/jessegoodier/lan-browser/security/policy).
+
+  - type: input
+    id: app-version
+    attributes:
+      label: LAN Browser version
+      description: Shown in Settings › Help & Support.
+      placeholder: "1.0"
+    validations:
+      required: true
+
+  - type: input
+    id: ios-device
+    attributes:
+      label: iOS version and device
+      placeholder: "iOS 18.4, iPhone 15 Pro"
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What you expected, and what happened instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open ...
+        2. Tap ...
+        3. ...
+
+  - type: textarea
+    id: connection-report
+    attributes:
+      label: Connection report
+      description: "Paste from **Why can’t I connect?** › **Copy Report**. Remove private addresses first."
+      render: text

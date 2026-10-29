@@ -1,0 +1,31 @@
+name: Feature request
+description: Suggest a change or a new feature for LAN Browser
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        LAN Browser stays free, works offline from any server you run, and needs no backend or account. New native networking must be opt-in.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What are you trying to do, and what gets in the way?
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: Optional. Describe how you imagine it working.
+
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - label: "This doesn’t require a backend, analytics, accounts, or paid features."
+          required: true
