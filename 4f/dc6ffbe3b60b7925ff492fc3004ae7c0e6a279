@@ -1,0 +1,49 @@
+LANBrowser/NetworkViews.swift
+  s_fe831625a24291::t_846d7de4d29054 23,60-65,184,196,435,457-458
+  s_fe831625a24291::t_ded6c03a061d2a 7-14
+LANBrowser.xcodeproj/project.pbxproj
+  s_fe831625a24291::t_6a2782c981090b 270,273,298,301
+LANBrowser/LANBrowserApp.swift
+  s_fe831625a24291::t_0c6d7aedf689e1 7-41
+LANBrowser/DiagnosticsLogic.swift
+  s_fe831625a24291::t_846d7de4d29054 71-75,77,80,82-84,96,110-112
+LANBrowser/TabViews.swift
+  s_fe831625a24291::t_e60be857b4b473 8,10-11,36-42,48-51
+  s_fe831625a24291::t_65d3e7fa2aa50d 52-54
+LANBrowser/Info.plist
+  s_fe831625a24291::t_6a2782c981090b 67
+LANBrowser/ConnectionDiagnostics.swift
+  s_fe831625a24291::t_846d7de4d29054 8,12-15,33,39,51,68,80,104
+LANBrowser/BrowserScreen.swift
+  s_fe831625a24291::t_51f578daef348d 103-104,107,109-113
+  s_fe831625a24291::t_bf2bd21a5608ad 108
+  s_fe831625a24291::t_ef9025e751fef7 38-39
+  s_fe831625a24291::t_b003e1f006342a 94
+  s_fe831625a24291::t_146056cc833f59 348-352,354-364,366-374,376-382,384-387,392-496,501
+  s_fe831625a24291::t_39126270f8b8c4 60,63
+  s_fe831625a24291::t_1eb779a39f6c23 533-566
+LANBrowser/PortScan.swift
+  s_fe831625a24291::t_5db04677cec62b 36,57,64
+LANBrowser/SettingsView.swift
+  s_fe831625a24291::t_129771276871bb 67
+Scripts/check.sh
+  s_fe831625a24291::t_aa29283b367ccc 13-15
+Tests/CoreChecks.swift
+  s_fe831625a24291::t_34ec682bdc6a93 116-124
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "4fdc6ffbe3b60b7925ff492fc3004ae7c0e6a279",
+  "prompts": {},
+  "sessions": {
+    "s_fe831625a24291": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "cdc10906-8982-44a9-8cfb-30bdf61ea01b",
+        "model": "unknown"
+      },
+      "human_author": "jesse goodier <31039225+jessegoodier@users.noreply.github.com>"
+    }
+  }
+}
