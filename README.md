@@ -1,5 +1,7 @@
 # LAN Browser
 
+[![CI](https://github.com/jessegoodier/lan-browser/actions/workflows/ci.yml/badge.svg)](https://github.com/jessegoodier/lan-browser/actions/workflows/ci.yml) [![CodeQL](https://github.com/jessegoodier/lan-browser/actions/workflows/codeql.yml/badge.svg)](https://github.com/jessegoodier/lan-browser/actions/workflows/codeql.yml) [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/jessegoodier/lan-browser/badge)](https://scorecard.dev/viewer/?uri=github.com/jessegoodier/lan-browser) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 A small iPhone browser with tabs for home services and captive-portal Wi-Fi. Built with SwiftUI and WebKit, it requires iOS 17.0 or later and has no dependencies.
 
 LAN Browser is free and will never have paid features, subscriptions, or ads. It’s built for the community of home-networking enthusiasts who run their own servers, routers and smart-home devices.
@@ -113,13 +115,17 @@ The encryption declaration reflects use of Apple’s built-in HTTPS support with
 
 Foreground downloads only: keep the app open while downloading. Resuming downloads after termination, background transfers, and bookmark sync are outside this version.
 
+## Security
+
+Report vulnerabilities privately, as described in [SECURITY.md](SECURITY.md), rather than in a public issue. CodeQL, OpenSSF Scorecard and zizmor check the code and the GitHub Actions workflows, Dependabot keeps the pinned actions current, and every action is pinned to a full commit SHA.
+
 ## Support
 
 For help, see [SUPPORT.md](SUPPORT.md). The [privacy policy](LANBrowser/privacy_policy.md) is also bundled with the app and shown offline in **Settings**.
 
 ## Contributing
 
-Issues and pull requests are welcome; see [AGENTS.md](AGENTS.md) for project layout and conventions.
+Issues and pull requests are welcome; see [AGENTS.md](AGENTS.md) for project layout and conventions. Pull requests use a checklist (`.github/pull_request_template.md`) covering `Scripts/check.sh`, the simulator build, and the privacy and networking rules. CI must pass.
 
 ## License
 

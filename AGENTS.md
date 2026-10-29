@@ -39,11 +39,14 @@ Other locations:
 - `Tests/serve_fixture.py` is a manual test server on port 8889.
 - `docs/TESTING.md` lists manual on-device checks.
 - `LICENSE` is MIT.
+- `.github/workflows/`: `ci.yml` (check.sh and an unsigned simulator build), `codeql.yml` (Swift, Actions, Python), `scorecard.yml`, `zizmor.yml` (workflow security audit), `dependency-review.yml`.
+- `Scripts/policy_check.sh` (run by `check.sh`) fails if ATS gains an exception, the privacy manifest declares tracking or collected data, a package dependency appears, or `URLCredential(trust:)` is used outside `BrowserTab` or without the `isLocalHost` check. Changing those guarantees means changing this script and the docs together.
+- `SECURITY.md` is the vulnerability policy; `.github/dependabot.yml` updates GitHub Actions.
 
 ## Commands
 
 ```sh
-Scripts/check.sh   # compiles Foundation-only sources + CoreChecks for macOS, runs them, lints plists/pbxproj
+Scripts/check.sh   # compiles Foundation-only sources + CoreChecks for macOS, runs them, lints plists/pbxproj, runs policy_check.sh
 xcodebuild -project LANBrowser.xcodeproj -scheme LANBrowser \
   -destination 'generic/platform=iOS Simulator' -derivedDataPath build/dd CODE_SIGNING_ALLOWED=NO build
 ```
@@ -76,6 +79,7 @@ There is no XCUITest target and simulator taps can’t be scripted here, so test
 - **Style:** comments are sparse and explain *why*. User-facing copy is full sentences with curly apostrophes (’). Errors shown to users are `String?` messages, not typed error UI.
 - **Bookmark schema:** `bookmarks.json` must keep decoding. Any new `Bookmark` field must be optional or decoded with `decodeIfPresent`, because a decode failure leaves the file untouched and shows an error.
 - **Seed bookmark:** `CoreChecks` asserts it is exactly `[.httpForever]`.
+- **Workflows:** pin every action to a full commit SHA with a `# vX.Y.Z` comment, set `permissions: {}` at the top level and grant the least each job needs, use `persist-credentials: false` on checkout, and never interpolate `${{ }}` expressions into `run:` scripts (pass them through `env:`). zizmor runs on every PR and must stay clean.
 
 ## Privacy and networking rules
 
