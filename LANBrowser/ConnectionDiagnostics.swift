@@ -5,10 +5,14 @@ import Foundation
 @MainActor
 final class ConnectionDiagnostics: ObservableObject {
     let url: URL
+    let device: HostDevice
     @Published private(set) var steps = DiagnosticKind.allCases.map { DiagnosticStep(kind: $0) }
     @Published private(set) var isRunning = false
 
-    init(url: URL) { self.url = url }
+    init(url: URL, device: HostDevice) {
+        self.url = url
+        self.device = device
+    }
 
     var report: String { DiagnosticsText.report(url: url, steps: steps) }
 
@@ -26,13 +30,13 @@ final class ConnectionDiagnostics: ObservableObject {
         update(.network, .running, "Checking…")
         let network = await NetworkProbe.currentNetwork()
         guard network.connected else {
-            update(.network, .failed, "Not connected", advice: DiagnosticsText.advice(for: .noNetwork, target: target))
+            update(.network, .failed, "Not connected", advice: DiagnosticsText.advice(for: .noNetwork, target: target, device: device))
             skipRemaining(after: .network)
             return
         }
         let networkDetail = [network.interface, network.address].compactMap { $0 }.joined(separator: " · ")
         if target.isLocal && !network.onWiFi {
-            update(.network, .warning, networkDetail, advice: DiagnosticsText.wrongInterface)
+            update(.network, .warning, networkDetail, advice: DiagnosticsText.wrongInterface(device: device))
         } else {
             update(.network, .passed, networkDetail)
         }
@@ -44,7 +48,7 @@ final class ConnectionDiagnostics: ObservableObject {
             update(.permission, .running, "Checking…")
             let outcome = await NetworkProbe.connect(host: target.host, port: target.port)
             if outcome == .failed(.permissionDenied) {
-                update(.permission, .failed, "Not allowed", advice: DiagnosticsText.advice(for: .permissionDenied, target: target))
+                update(.permission, .failed, "Not allowed", advice: DiagnosticsText.advice(for: .permissionDenied, target: target, device: device))
                 skipRemaining(after: .permission)
                 return
             }
@@ -61,7 +65,7 @@ final class ConnectionDiagnostics: ObservableObject {
         case .success(let addresses):
             update(.dns, .passed, "\(target.host) → \(addresses.prefix(3).joined(separator: ", "))")
         case .failure(let failure):
-            update(.dns, .failed, "\(target.host) not found", advice: DiagnosticsText.advice(for: failure, target: target))
+            update(.dns, .failed, "\(target.host) not found", advice: DiagnosticsText.advice(for: failure, target: target, device: device))
             skipRemaining(after: .dns)
             return
         }
@@ -73,7 +77,7 @@ final class ConnectionDiagnostics: ObservableObject {
         case .connected:
             update(.port, .passed, "Port \(target.port) is open")
         case .failed(let failure):
-            update(.port, .failed, portDetail(failure, port: target.port), advice: DiagnosticsText.advice(for: failure, target: target))
+            update(.port, .failed, portDetail(failure, port: target.port), advice: DiagnosticsText.advice(for: failure, target: target, device: device))
             skipRemaining(after: .port)
             return
         }
@@ -97,7 +101,7 @@ final class ConnectionDiagnostics: ObservableObject {
         if Redirects.next(from: hops.last?.url ?? target.url, status: http.statusCode, location: http.location) != nil {
             update(.http, .warning, detail, advice: "The page kept redirecting, so LAN Browser stopped after \(Redirects.limit) redirects. The server’s settings may send it in a loop.")
         } else if let failure = http.failure {
-            update(.http, .failed, detail, advice: DiagnosticsText.advice(for: failure, target: finalTarget))
+            update(.http, .failed, detail, advice: DiagnosticsText.advice(for: failure, target: finalTarget, device: device))
         } else if http.certificateTrusted == false {
             update(.http, .warning, detail, advice: DiagnosticsText.untrustedCertificate)
         } else {

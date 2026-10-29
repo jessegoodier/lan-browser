@@ -68,12 +68,20 @@ struct DiagnosticTarget: Equatable, Sendable {
     }
 }
 
+/// The device LAN Browser runs on, so advice names it correctly on iPhone, iPad and Mac.
+enum HostDevice: String {
+    case iPhone, iPad, mac = "Mac"
+}
+
 enum DiagnosticsText {
-    static func advice(for failure: ConnectionFailure, target: DiagnosticTarget) -> String {
+    static func advice(for failure: ConnectionFailure, target: DiagnosticTarget, device: HostDevice) -> String {
         switch failure {
         case .noNetwork:
-            return "This iPhone isn’t connected to a network. Turn on Wi-Fi and join the same network as your device."
+            return "This \(device.rawValue) isn’t connected to a network. Turn on Wi-Fi and join the same network as your device."
         case .permissionDenied:
+            if device == .mac {
+                return "LAN Browser isn’t allowed to reach devices on your network. Turn on System Settings › Privacy & Security › Local Network › LAN Browser. If macOS just asked, click Allow, then Retry Checks."
+            }
             return "LAN Browser isn’t allowed to reach devices on your network. Turn on Settings › Privacy & Security › Local Network › LAN Browser. If iOS just asked, tap Allow, then Retry Checks."
         case .nameNotFound:
             if target.host.lowercased().hasSuffix(".local") {
@@ -85,7 +93,7 @@ enum DiagnosticsText {
         case .timedOut:
             return "The device didn’t reply. It may be off or asleep, on a different network, or behind a firewall. Guest Wi-Fi networks often stop devices from reaching each other."
         case .unreachable:
-            return "There’s no route to this address. Check that this iPhone and the device are on the same network and that the IP address is still current."
+            return "There’s no route to this address. Check that this \(device.rawValue) and the device are on the same network and that the IP address is still current."
         case .secureConnectionFailed:
             return "The secure connection failed. The service may not offer HTTPS on this port; try http:// instead."
         case .noHTTPResponse:
@@ -99,7 +107,9 @@ enum DiagnosticsText {
         }
     }
 
-    static let wrongInterface = "This iPhone isn’t on Wi-Fi. Local addresses usually work only on the same Wi-Fi network as the device."
+    static func wrongInterface(device: HostDevice) -> String {
+        "This \(device.rawValue) isn’t on Wi-Fi. Local addresses usually work only on the same Wi-Fi network as the device."
+    }
     static let untrustedCertificate = "The certificate isn’t trusted, which is common for home devices with self-signed certificates. LAN Browser still opens local addresses like this one and marks the page with a red “!”; tap it to compare the certificate’s fingerprint with the device."
 
     /// Parses `HTTP/1.1 200 OK` from the start of a response.

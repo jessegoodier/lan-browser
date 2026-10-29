@@ -4,7 +4,7 @@ Guidance for coding agents working in this repository.
 
 ## What this is
 
-LAN Browser is a small tabbed iPhone browser (SwiftUI + WebKit) for home-network web apps and captive-portal Wi-Fi. Plain HTTP is a feature, not a bug. There is no backend and no analytics. It is meant only for trusted home networks, as the first-use notice says. Minimum iOS is **17.0** (pinned at project and target level). It builds with current Xcode; there are no dependencies to install.
+LAN Browser is a small tabbed iPhone and iPad browser (SwiftUI + WebKit) for home-network web apps and captive-portal Wi-Fi. Plain HTTP is a feature, not a bug. There is no backend and no analytics. It is meant only for trusted home networks, as the first-use notice says. Minimum iOS and iPadOS is **17.0** (pinned at project and target level). The iPad app also runs on Apple silicon Macs (“Designed for iPad”, `SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = YES`); there is no Catalyst or native macOS target. It builds with current Xcode; there are no dependencies to install.
 
 This file doubles as the contributor guide: it describes the layout, commands and conventions that both people and coding agents should follow.
 
@@ -14,8 +14,8 @@ All app code is in `LANBrowser/`:
 
 | File | Purpose |
 | --- | --- |
-| `LANBrowserApp.swift` | App entry point |
-| `BrowserScreen.swift` | Main screen, bottom toolbar, bookmark list, sheets (Page Info, bookmark editor, rename alert) |
+| `LANBrowserApp.swift` | App entry point and `BrowserCommands` (menu bar items and keyboard shortcuts) |
+| `BrowserScreen.swift` | Main screen, toolbars (bottom on iPhone, top with an inline address field on iPad at regular width), bookmark list, sheets (Page Info, bookmark editor, rename alert). Also `BrowserLayout`, and `BrowserCommand`/`BrowserActions`, the focused scene value the menu commands act through |
 | `BrowserModel.swift` | `BrowserSession`: tabs, selection, downloads and export queue, tab saving, clear website data. Also `PageInfo` and debug-only `PageDiagnostics` |
 | `BrowserTab.swift` | One tab: lazy `WKWebView`, navigation state, page errors, new-window links (open a new tab), JS dialogs |
 | `TabStore.swift` | `SavedTab`/`SavedTabs` in tabs.json, `TabPolicy`, `OpenBookmarksIn` |
@@ -24,7 +24,7 @@ All app code is in `LANBrowser/`:
 | `DeviceNames.swift` | `DeviceRecord`/`DeviceStore`: friendly names, last-seen IPs and reverse-lookup names per host (devices.json); `label(for:)` builds `name:port · IP` |
 | `Address.swift` | `BrowserAddress.parse`: user input to http/https URL |
 | `ServiceCatalog.swift` | Bonjour types, service-to-URL mapping, duplicate merging, `isLocalHost` |
-| `DiagnosticsLogic.swift` | Diagnostic step types, advice text, HTTP status/header/`<title>` parsing, report text; `PageResponse` (a non-200 main-page response with its headers), `HTTPStatus` (standard reason phrases), `ErrorText` (exact error domain/code/URL), `Redirects` and `BlockedPorts` (the Fetch “bad ports” WebKit drops silently) |
+| `DiagnosticsLogic.swift` | Diagnostic step types, advice text (naming the `HostDevice`: iPhone, iPad or Mac), HTTP status/header/`<title>` parsing, report text; `PageResponse` (a non-200 main-page response with its headers), `HTTPStatus` (standard reason phrases), `ErrorText` (exact error domain/code/URL), `Redirects` and `BlockedPorts` (the Fetch “bad ports” WebKit drops silently) |
 | `NetworkProbe.swift` | Native checks: TCP connect, raw HTTP GET (with TLS trust recording), DNS lookup, network snapshot, and `NetworkProbe.follow` for redirect chains (`Redirects.limit` = 5; used by diagnostics and the port scan’s page reading) |
 | `Certificates.swift` | `CertificateSummary`, `CertificateIssue`: chain details (subject, common name, validity, key, serial, SHA-256 fingerprints) and report text for untrusted local certificates |
 | `LocalNetwork.swift` | Opt-in Bonjour discovery (`NWBrowser`), run on demand after one automatic first scan, the two-pass port scan once confirmed, and bookmark reachability dots |
@@ -66,6 +66,7 @@ There is no XCUITest target and simulator taps can’t be scripted here, so test
   - `discovered.json` shows a saved scan.
   - Set preferences with `xcrun simctl spawn <sim> defaults write com.jesse.lanbrowser <key> …`, for example `localNetworkFeatures`, `localNetworkAutoScanned`, `trustedNetworkNoticeAccepted` or `portScanPreset`.
   - Capture with `xcrun simctl io <sim> screenshot`.
+  - Check layout changes on an iPad simulator (top bar) and an iPhone simulator (bottom bar). Leave any simulator that is already booted alone; it may be in use.
 - **Network code** (`LocalNetwork`, `ConnectionDiagnostics`, `NetworkProbe`) also compiles for macOS. Build it with a small `@main` runner under `build/` (gitignored) using the same `swiftc` flags as `Scripts/check.sh`, then run it against the real LAN.
 - **Test servers:** a few lines of Python `http.server` can return a specific status or body, e.g. a blank 404 or a 404 sent as `application/octet-stream`.
 - **zsh:** don’t name a shell loop variable `path`. In zsh it is tied to `PATH` and breaks every later command.
@@ -73,6 +74,7 @@ There is no XCUITest target and simulator taps can’t be scripted here, so test
 ## Conventions
 
 - **Xcode project:** `project.pbxproj` uses hand-numbered IDs, not synchronized folders. Every new file needs a PBXFileReference, a PBXBuildFile, a group child and a Sources (or Resources) entry. Continue the existing ID sequence.
+- **Layouts:** gate iPad and Mac UI on `BrowserLayout.usesTopBar(sizeClass)` (iPad idiom *and* regular width), never on size class alone, so every iPhone, including an unfolded iPhone Duo, keeps the bottom toolbar the system can move into the side strip. Name the running device with `HostDevice.current` (it checks `isiOSAppOnMac` first, because the Mac reports the iPad idiom); on a Mac, point to System Settings rather than `UIApplication.openSettingsURLString`. New browser actions that should have a shortcut go through `BrowserCommand`.
 - **Testable logic:** keep pure logic in Foundation-only files (no UIKit, WebKit or SwiftUI) and add them to `Scripts/check.sh` with checks in `CoreChecks.swift`. It currently compiles `Address`, `Bookmarks`, `ServiceCatalog`, `DiagnosticsLogic`, `DeviceNames`, `TabStore`, `DiscoveryCache` and `PortScan`.
 - **Concurrency:** use Swift 5 mode with `SWIFT_STRICT_CONCURRENCY = complete`. Models are `@MainActor final class … : ObservableObject` with `@Published`; don’t switch to `@Observable`. `NetworkProbe` bridges Network.framework callbacks with `Once`, a resume-exactly-once continuation helper.
 - **State wrapper:** in view files, use `@ViewState`, a private `typealias ViewState<Value> = SwiftUI.State<Value>` that avoids a same-named SDK macro. Redeclare it in each new view file.

@@ -33,7 +33,7 @@ enum PortScanPreset: String, CaseIterable, Identifiable, Codable, Sendable {
     }
 }
 
-/// A block of IPv4 addresses, such as the network the phone is on.
+/// A block of IPv4 addresses, such as the network this device is on.
 struct IPv4Range: Equatable, Sendable {
     let network: UInt32
     let prefix: Int
@@ -54,14 +54,14 @@ struct IPv4Range: Equatable, Sendable {
     var cidr: String { "\(IPv4Range.string(network))/\(prefix)" }
     var description: String { "\(IPv4Range.string(first)) – \(IPv4Range.string(last))" }
 
-    /// Every usable address, leaving out the network and broadcast addresses and the phone itself.
+    /// Every usable address, leaving out the network and broadcast addresses and this device itself.
     func hosts(excluding excluded: String? = nil) -> [String] {
         guard count > 0 else { return [] }
         let skip = excluded.flatMap(IPv4Range.number)
         return (first...last).filter { $0 != skip }.map(IPv4Range.string)
     }
 
-    /// The phone’s whole network when it has at most 1,024 addresses, otherwise the /24 around the phone.
+    /// This device’s whole network when it has at most 1,024 addresses, otherwise the /24 around it.
     static func scanRange(network: String, deviceIP: String) -> IPv4Range? {
         guard let range = IPv4Range(cidr: network), range.count > 0 else { return nil }
         if range.count <= maxAddresses { return range }

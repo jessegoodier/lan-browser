@@ -5,8 +5,10 @@ struct TabSwitcher: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject var session: BrowserSession
     @ObservedObject var devices: DeviceStore
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
-    private let columns = [GridItem(.flexible(), spacing: 16), GridItem(.flexible(), spacing: 16)]
+    // Two columns on iPhone, more on a wide iPad or Mac window.
+    private let columns = [GridItem(.adaptive(minimum: 160), spacing: 16)]
 
     var body: some View {
         NavigationStack {
@@ -31,15 +33,22 @@ struct TabSwitcher: View {
             .navigationTitle(session.tabs.count == 1 ? "1 Tab" : "\(session.tabs.count) Tabs")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .bottomBar) {
-                    Button("New Tab", systemImage: "plus") {
-                        session.newTab()
-                        dismiss()
-                    }
+                if BrowserLayout.usesTopBar(sizeClass) {
+                    ToolbarItem(placement: .topBarLeading) { newTabButton }
+                    ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
+                } else {
+                    ToolbarItem(placement: .bottomBar) { newTabButton }
+                    ToolbarItem(placement: .bottomBar) { Spacer() }
+                    ToolbarItem(placement: .bottomBar) { Button("Done") { dismiss() }.bold() }
                 }
-                ToolbarItem(placement: .bottomBar) { Spacer() }
-                ToolbarItem(placement: .bottomBar) { Button("Done") { dismiss() }.bold() }
             }
+        }
+    }
+
+    private var newTabButton: some View {
+        Button("New Tab", systemImage: "plus") {
+            session.newTab()
+            dismiss()
         }
     }
 

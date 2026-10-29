@@ -1,6 +1,6 @@
 # Manual testing
 
-Automated checks run with `Scripts/check.sh`; see the [README](../README.md#testing). The checks below are on-device checks. They need WebKit, a real network, and the iOS Local Network permission, so they can’t run in the automated checks.
+Automated checks run with `Scripts/check.sh`; see the [README](../README.md#testing). The checks below are on-device checks. They need WebKit, a real network, and the Local Network permission, so they can’t run in the automated checks.
 
 ## Settings and first launch
 
@@ -32,9 +32,9 @@ Automated checks run with `Scripts/check.sh`; see the [README](../README.md#test
 
 ## Local network features
 
-- Turn on **Local Network Features** from the bookmark-list card. Confirm the iOS Local Network prompt appears once, **On This Network** lists devices that advertise a web page, **+** saves one as a bookmark, and status dots turn green or red.
-- Relaunch the app. The saved scan should appear with its scan time, and no new scan should start. **Scan Again** or a pull down on the bookmark list should start one.
-- Deny the permission in the iOS Settings app and confirm the list and diagnostics explain how to turn it back on. Turn the switch off and confirm the list and dots disappear.
+- Turn on **Local Network Features** from the bookmark-list card. Confirm the Local Network prompt appears once, **On This Network** lists devices that advertise a web page, **+** saves one as a bookmark, and status dots turn green or red.
+- Relaunch the app. The saved scan should appear with its scan time, and no new scan should start. **Scan Again** or a pull down on the bookmark list should start one. On a Mac, use Scan Again, since there is no pull down.
+- Deny the permission in the Settings app (System Settings on a Mac) and confirm the list and diagnostics explain how to turn it back on. Turn the switch off and confirm the list and dots disappear.
 - On a clean install, turn on **Local Network Features** for the first time. The automatic first scan never port-scans, so its scan line should show Bonjour only.
 - Pick **Common Web Apps** in **Settings › Local Network › Port Scan**. Confirm the sheet shows the right address range, the 22 ports, and the connection count, and that **Cancel** reverts the picker. Choose it again and tap **Confirm**.
 - After confirming, tap **Scan Again**. Progress should appear with a **Cancel** button, and web apps that don’t advertise over Bonjour should be listed with a “port scan” tag. Relaunch the app: the saved results should appear with their scan time, and no new scan should start. Start another scan and tap **Cancel** partway through. The previous list should remain.
@@ -43,7 +43,7 @@ Automated checks run with `Scripts/check.sh`; see the [README](../README.md#test
 
 ## Downloads
 
-- Download a file, choose an **On My iPhone** or **iCloud Drive** destination, and open it in Files. Download the same name twice to check the system’s conflict handling. Cancel a Save to Files picker and verify browsing still works.
+- Download a file, choose an **On My iPhone/iPad** or **iCloud Drive** destination, and open it in Files. Download the same name twice to check the system’s conflict handling. Cancel a Save to Files picker and verify browsing still works.
 - Test a failed download, a file from a logged-in service if available, and multiple downloads. Each successful download should get its own destination picker.
 
 ## Test fixture
@@ -54,7 +54,7 @@ Automated checks run with `Scripts/check.sh`; see the [README](../README.md#test
 python3 Tests/serve_fixture.py
 ```
 
-Keep Terminal running and, from the phone on the same Wi-Fi, open `http://YOUR_MAC_LAN_IP:8889/`. Allow incoming connections if macOS asks. Stop the server with Control-C.
+Keep Terminal running and, from another device on the same Wi-Fi such as an iPhone or iPad, open `http://YOUR_MAC_LAN_IP:8889/`. Allow incoming connections if macOS asks. Stop the server with Control-C.
 
 To test discovery without a home server, advertise the fixture from the Mac over Bonjour:
 
@@ -63,3 +63,26 @@ dns-sd -R "LAN Fixture" _http._tcp local 8889
 ```
 
 After a scan with **Local Network Features** on, the fixture should appear in **On This Network**.
+
+## iPad
+
+- At full width, such as landscape or the full iPad window, check the top bar: Back and Forward on the left, the address field in the middle, and Reload, Page Info, Bookmarks and Tabs on the right. The bottom toolbar should not appear. On the bookmark list, **Edit** sits next to Back and Forward, and **+** and **Settings** are on the right.
+- Open Split View or Slide Over with another app. Confirm the bottom toolbar returns and the address text you entered is still there. Return to full width and confirm the top bar comes back.
+- Rotate through all four orientations, including upside down, with a page loaded and with the bookmark list showing. Check that the layout fits and the top bar or bottom toolbar stays usable.
+- With a hardware keyboard, try each shortcut: ⌘L, ⌘T, ⌘W, ⌘R, ⌘., ⌘[, ⌘], ⌘D, ⌘⇧\, and ⌘,. Confirm each does what its name says.
+- Open the tab overview with several tabs. It should show more columns than on iPhone.
+- Open Page Info, Settings, the bookmark editor and the rename alert. Check that the sheets and alerts fit the iPad width and look right in light and dark mode.
+
+## Mac (Designed for iPad, Apple silicon)
+
+Run the app on a Mac with Apple silicon. Intel Macs are not supported. In Xcode, choose **My Mac (Designed for iPad)** as the run destination and press **⌘R**.
+
+- Launch the app and confirm the top bar shows at full width.
+- Turn on **Local Network Features**. Confirm the Local Network prompt appears once. Then deny access in **System Settings › Privacy & Security › Local Network**, open a local address with **Why can’t I connect?**, and confirm the advice points to that System Settings path. The advice should have no **Open Settings** button. Turn access back on in System Settings.
+- With the fixture server and `dns-sd` running as described above, use **Scan Again** from the On This Network ••• menu. Confirm **LAN Fixture** appears in **On This Network**. There is no pull down on a Mac.
+- With both Ethernet and Wi-Fi connected, choose **Common Web Apps** in **Settings › Local Network › Port Scan** and open the confirmation sheet. Confirm the address range is the home network you expect. Compare it with the addresses shown for Ethernet and Wi-Fi in **System Settings › Network**.
+- Open a self-signed HTTPS device on your network. Confirm the page opens with the red “!” strip, and that the certificate sheet shows its SHA-256 fingerprint.
+- Download a file and confirm the Save to Files panel appears. Choose a folder, then check that the file saved there.
+- With two or more tabs, press ⌘W and confirm it closes the current tab, not the window. With one tab, confirm the window behavior is what you expect. Check the other shortcuts from the iPad list above.
+- Resize the window narrow, such as beside another window, and confirm the bottom toolbar appears. Widen it again and confirm the top bar returns.
+- After adding a bookmark and opening a few tabs, check the app data in `~/Library/Containers/com.jesse.lanbrowser/Data/Library/Application Support/LANBrowser/`. The files there include `bookmarks.json` and `tabs.json`.
