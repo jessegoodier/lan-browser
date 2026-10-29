@@ -6,6 +6,7 @@ import time
 PAGE = b'''<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>LAN Browser checks</title><style>body{font:18px system-ui;padding:20px}li{margin:20px 0}button{font:inherit}</style>
 <h1>LAN Browser checks</h1><ul>
+<li><a href="/login">Password saving (use made-up credentials)</a></li>
 <li><a href="/next">Navigation page</a></li>
 <li><a href="/next" target="_blank">New window (opens a new tab)</a></li>
 <li><a href="/redirect">HTTP redirect</a></li>
@@ -22,6 +23,21 @@ PAGE = b'''<!doctype html><meta name="viewport" content="width=device-width,init
 
 
 class Handler(BaseHTTPRequestHandler):
+    def do_POST(self):
+        if self.path != '/login':
+            self.send_error(404)
+            return
+        # Discard the body without logging or echoing credentials.
+        length = int(self.headers.get('Content-Length', '0'))
+        if length > 65536:
+            self.send_error(413)
+            return
+        self.rfile.read(length)
+        self.send_response(303)
+        self.send_header('Location', '/login')
+        self.send_header('Content-Length', '0')
+        self.end_headers()
+
     def do_GET(self):
         route = self.path.split('?', 1)[0]
         if route in ('/redirect', '/https'):
@@ -60,6 +76,13 @@ class Handler(BaseHTTPRequestHandler):
             return
         if route == '/':
             data = PAGE
+        elif route == '/login':
+            data = b'''<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Password saving checks</title><h1>Password saving checks</h1>
+<p>Use made-up credentials. This fixture discards the submitted values.</p>
+<form method="post" action="/login"><label>Username <input name="username" autocomplete="username"></label>
+<label>Password <input type="password" name="password" autocomplete="current-password"></label>
+<button>Sign In</button></form>'''
         elif route == '/next':
             data = b'<meta name="viewport" content="width=device-width"><title>Next page</title><h1>Navigation works</h1><a href="/">Back to checks</a>'
         else:

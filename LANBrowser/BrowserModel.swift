@@ -148,6 +148,7 @@ final class BrowserSession: NSObject, ObservableObject {
     @Published private(set) var tabs: [BrowserTab] = []
     @Published private(set) var selectedID = UUID()
     @Published var message: String?
+    @Published var passwordOffer: PasswordOffer?
     @Published private(set) var activeDownloadCount = 0
     @Published var export: DownloadExport?
     private var tabChanges: [UUID: AnyCancellable] = [:]
@@ -181,6 +182,9 @@ final class BrowserSession: NSObject, ObservableObject {
     static func makeWebViewConfiguration() -> WKWebViewConfiguration {
         let configuration = WKWebViewConfiguration()
         configuration.websiteDataStore = .default()
+        FormInputBehavior.install(in: configuration.userContentController)
+        PasswordCapture.install(in: configuration.userContentController)
+        PasswordAutofill.install(in: configuration.userContentController)
         #if DEBUG
         PageDiagnostics.install(in: configuration.userContentController)
         #endif
@@ -190,6 +194,21 @@ final class BrowserSession: NSObject, ObservableObject {
     static var restoresTabs: Bool { UserDefaults.standard.object(forKey: TabPolicy.restoreKey) as? Bool ?? true }
 
     var selectedTab: BrowserTab { tabs.first { $0.id == selectedID } ?? tabs[0] }
+
+    func offerPassword(_ offer: PasswordOffer) {
+        guard PasswordPolicy.isEnabled(), passwordOffer == nil else { return }
+        PasswordDiagnostics.record("Save offer queued.")
+        passwordOffer = offer
+    }
+
+    func savePassword(_ offer: PasswordOffer) {
+        // SwiftUI dismisses the alert before its action runs. Use the alert’s captured value.
+        guard PasswordPolicy.isEnabled() else { passwordOffer = nil; return }
+        PasswordDiagnostics.record("Save action received.")
+        passwordOffer = nil
+        do { try PasswordStore.save(offer) }
+        catch { message = "Couldn’t save this password. \(error.localizedDescription)" }
+    }
 
     // MARK: Tabs
 
@@ -201,6 +220,7 @@ final class BrowserSession: NSObject, ObservableObject {
     }
 
     private func insert(_ tab: BrowserTab) {
+        passwordOffer = nil
         let index = tabs.firstIndex { $0.id == selectedID }.map { $0 + 1 } ?? tabs.endIndex
         tabs.insert(tab, at: index)
         observe(tab)
@@ -222,6 +242,7 @@ final class BrowserSession: NSObject, ObservableObject {
 
     func select(_ tab: BrowserTab) {
         guard tab.id != selectedID else { return }
+        passwordOffer = nil
         let previous = selectedTab
         Task { await previous.captureSnapshot() }
         selectedID = tab.id
@@ -230,6 +251,7 @@ final class BrowserSession: NSObject, ObservableObject {
 
     func close(_ tab: BrowserTab) {
         guard let index = tabs.firstIndex(where: { $0.id == tab.id }) else { return }
+        if passwordOffer?.tabID == tab.id { passwordOffer = nil }
         tab.close()
         tabs.remove(at: index)
         tabChanges[tab.id] = nil
@@ -278,6 +300,7 @@ final class BrowserSession: NSObject, ObservableObject {
     }
 
     func clearWebsiteData() async {
+        passwordOffer = nil
         // Close every tab so open pages cannot immediately recreate cookies or storage.
         tabs.forEach { $0.close() }
         tabChanges.removeAll()

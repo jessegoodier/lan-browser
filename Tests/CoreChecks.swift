@@ -9,6 +9,31 @@ struct CoreChecks {
             precondition(condition(), description)
             count += 1
         }
+        let passwordDefaults = UserDefaults(suiteName: "LANBrowserPasswordChecks-\(UUID().uuidString)")!
+        check(PasswordPolicy.isEnabled(in: passwordDefaults), "Password offers default to on")
+        passwordDefaults.set(false, forKey: PasswordPolicy.enabledKey)
+        check(!PasswordPolicy.isEnabled(in: passwordDefaults), "Password offers can be disabled")
+        passwordDefaults.removeObject(forKey: PasswordPolicy.enabledKey)
+        let httpOrigin = PasswordOrigin(URL(string: "http://NAS.local/login?secret=hidden")!)!
+        check(httpOrigin.label == "http://nas.local:80", "Password origin excludes paths and queries")
+        check(httpOrigin == PasswordOrigin(URL(string: "http://nas.local:80/other")!), "Default ports share a password origin")
+        check(httpOrigin != PasswordOrigin(URL(string: "https://nas.local/")!), "HTTP and HTTPS passwords stay separate")
+        check(httpOrigin != PasswordOrigin(URL(string: "http://nas.local:8080/")!), "Different service ports stay separate")
+        check(PasswordOrigin(URL(string: "file:///tmp/login")!) == nil, "Only web origins can save passwords")
+        check(PasswordOrigin(URL(string: "http://[fd00::1]:8080/")!)?.label == "http://[fd00::1]:8080", "IPv6 password origins")
+        check(PasswordPolicy.autofillEnabled(in: passwordDefaults), "AutoFill defaults to on")
+        passwordDefaults.set(false, forKey: PasswordPolicy.autofillKey)
+        check(!PasswordPolicy.autofillEnabled(in: passwordDefaults), "AutoFill can be disabled independently")
+        passwordDefaults.removeObject(forKey: PasswordPolicy.autofillKey)
+        let olderAccount = SavedPassword(origin: httpOrigin, username: "alice", modifiedAt: Date(timeIntervalSince1970: 1))
+        let newerAccount = SavedPassword(origin: httpOrigin, username: "bob", modifiedAt: Date(timeIntervalSince1970: 2))
+        let accounts = [olderAccount, newerAccount]
+        check(PasswordPolicy.accountToFill(accounts, origin: httpOrigin, username: "")?.username == "bob", "Empty forms use the most recently saved account")
+        check(PasswordPolicy.accountToFill(accounts, origin: httpOrigin, username: "alice")?.username == "alice", "Entered usernames select their own saved password")
+        check(PasswordPolicy.accountToFill(accounts, origin: httpOrigin, username: "ALICE") == nil, "Username matching preserves case")
+        check(PasswordPolicy.accountToFill(accounts, origin: PasswordOrigin(URL(string: "https://nas.local/")!)!, username: "") == nil, "AutoFill never crosses schemes")
+        check(PasswordPolicy.accountToFill(accounts, origin: PasswordOrigin(URL(string: "http://nas.local:8080/")!)!, username: "") == nil, "AutoFill never crosses ports")
+        check(PasswordPolicy.accountToFill(accounts, origin: PasswordOrigin(URL(string: "http://other.local/")!)!, username: "") == nil, "AutoFill never crosses hosts")
         let valid: [(String, String)] = [
             ("nas.local:8888", "http://nas.local:8888"),
             ("http://nas.local:8888/", "http://nas.local:8888/"),

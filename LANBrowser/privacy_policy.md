@@ -1,5 +1,5 @@
 Privacy Policy — LAN Browser
-Last updated: October 28, 2026
+Last updated: October 28, 2026 (password-saving and AutoFill update)
 
 Developer collection
 LAN Browser has no developer-operated backend, app accounts, advertising SDKs, or analytics SDKs. The developer does not receive your browsing history, bookmarks, form entries, or downloaded files through the app. The app does not track you across other companies’ apps or websites for advertising.
@@ -12,6 +12,9 @@ Bookmarks are stored in the app’s local storage until you edit or delete them 
 
 Tabs
 When Restore Tabs on Launch is on, which is the default, the addresses, titles, and Back/Forward history of your open tabs are saved on the device so they can be restored at launch. Turning the setting off, or using Clear Cookies & Website Data, deletes the saved tabs. Saved tabs are never sent to the developer or anyone else.
+
+Saved passwords
+Offer to Save Passwords is on by default in Settings (the gear). Each supported login-form submission offers Save or Not Now, including on HTTP pages and for previously saved credentials. Saving stores the username and password in this device’s Keychain, separated by scheme, host, port and username; saving again updates that entry. Passwords are available only while the device is unlocked and aren’t synced to iCloud or migrated to another device. Settings > Saved Passwords lets you reveal, copy and delete them. AutoFill Saved Passwords is also on by default and can be turned off separately in Settings. It fills supported main-page login forms for the exact saved scheme, host and port, including HTTP pages, without submitting the form. An entered username selects its matching account; an empty form uses the most recently saved account. Existing password text is preserved. Filled credentials are available to that website’s scripts before you submit.  Turning offers off and clearing website data keep saved passwords. Keychain entries may survive app deletion, so delete saved passwords before uninstalling. Embedded sign-in frames, HTTP authentication dialogs and some custom forms aren’t supported. Saving a password does not encrypt HTTP traffic. Credential capture is handled locally and credentials are never sent to the developer. Saving happens only after you choose Save. The save-offer and AutoFill preferences are stored in UserDefaults; credentials are not stored in the app’s JSON files or preferences.
 
 Downloads
 Downloads are temporarily staged inside the app before you choose a destination in Save to Files. Staged files are removed after export or cancellation, or at the next launch following an interrupted session. Exported files remain in the destination you selected, including a cloud storage provider if you chose one. Delete exported files through Files or the selected storage provider.

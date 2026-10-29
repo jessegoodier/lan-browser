@@ -29,6 +29,12 @@
 		0000000000000000000000DC /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000078 /* SettingsView.swift */; };
 		0000000000000000000000DD /* PortScan.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000079 /* PortScan.swift */; };
 		0000000000000000000000DE /* Certificates.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000007A /* Certificates.swift */; };
+		0000000000000000000000DF /* PasswordPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000007B /* PasswordPolicy.swift */; };
+		0000000000000000000000E0 /* PasswordStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000007C /* PasswordStore.swift */; };
+		0000000000000000000000E1 /* PasswordCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000007D /* PasswordCapture.swift */; };
+		0000000000000000000000E2 /* SavedPasswordsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000007E /* SavedPasswordsView.swift */; };
+		0000000000000000000000E3 /* FormInputBehavior.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00000000000000000000007F /* FormInputBehavior.swift */; };
+		0000000000000000000000E4 /* PasswordAutofill.swift in Sources */ = {isa = PBXBuildFile; fileRef = 000000000000000000000080 /* PasswordAutofill.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -56,6 +62,12 @@
 		000000000000000000000078 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		000000000000000000000079 /* PortScan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortScan.swift; sourceTree = "<group>"; };
 		00000000000000000000007A /* Certificates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Certificates.swift; sourceTree = "<group>"; };
+		00000000000000000000007B /* PasswordPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasswordPolicy.swift; sourceTree = "<group>"; };
+		00000000000000000000007C /* PasswordStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasswordStore.swift; sourceTree = "<group>"; };
+		00000000000000000000007D /* PasswordCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasswordCapture.swift; sourceTree = "<group>"; };
+		00000000000000000000007E /* SavedPasswordsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedPasswordsView.swift; sourceTree = "<group>"; };
+		00000000000000000000007F /* FormInputBehavior.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FormInputBehavior.swift; sourceTree = "<group>"; };
+		000000000000000000000080 /* PasswordAutofill.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasswordAutofill.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -97,6 +109,12 @@
 				000000000000000000000078 /* SettingsView.swift */,
 				000000000000000000000079 /* PortScan.swift */,
 				00000000000000000000007A /* Certificates.swift */,
+				000000000000000000000080 /* PasswordAutofill.swift */,
+				00000000000000000000007F /* FormInputBehavior.swift */,
+				00000000000000000000007E /* SavedPasswordsView.swift */,
+				00000000000000000000007D /* PasswordCapture.swift */,
+				00000000000000000000007C /* PasswordStore.swift */,
+				00000000000000000000007B /* PasswordPolicy.swift */,
 				000000000000000000000069 /* Assets.xcassets */,
 				00000000000000000000006A /* Info.plist */,
 				00000000000000000000006B /* PrivacyInfo.xcprivacy */,
@@ -197,6 +215,12 @@
 				0000000000000000000000DC /* SettingsView.swift in Sources */,
 				0000000000000000000000DD /* PortScan.swift in Sources */,
 				0000000000000000000000DE /* Certificates.swift in Sources */,
+				0000000000000000000000E4 /* PasswordAutofill.swift in Sources */,
+				0000000000000000000000E3 /* FormInputBehavior.swift in Sources */,
+				0000000000000000000000E2 /* SavedPasswordsView.swift in Sources */,
+				0000000000000000000000E1 /* PasswordCapture.swift in Sources */,
+				0000000000000000000000E0 /* PasswordStore.swift in Sources */,
+				0000000000000000000000DF /* PasswordPolicy.swift in Sources */,
 			);
 		};
 /* End PBXSourcesBuildPhase section */

@@ -29,6 +29,11 @@ jobs:
       - name: Core and policy checks
         run: Scripts/check.sh
 
+      - name: Password form checks
+        run: |
+          node Tests/password_capture_checks.js
+          node Tests/password_autofill_checks.js
+
       - name: Simulator build
         run: |
           xcodebuild -project LANBrowser.xcodeproj -scheme LANBrowser \

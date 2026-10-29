@@ -38,6 +38,7 @@ struct BrowserScreen: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
     @FocusState private var addressFocused: Bool
     @AppStorage(OpenBookmarksIn.defaultsKey) private var openPreference = OpenBookmarksIn.newTab
+    @AppStorage(PasswordPolicy.enabledKey) private var offerToSavePasswords = true
     @AppStorage(TrustedNetworkNotice.acceptedKey) private var noticeAccepted = false
     @ViewState private var renaming: DeviceRename?
     @ViewState private var addressInput = ""
@@ -121,6 +122,7 @@ struct BrowserScreen: View {
         }
         .onChange(of: scenePhase) { _, phase in
             network.setForeground(phase != .background)
+            if phase != .active { session.passwordOffer = nil }
             if phase == .background { session.saveTabs() }
         }
         .onChange(of: store.bookmarks) { _, bookmarks in network.bookmarksChanged(bookmarks) }
@@ -156,6 +158,7 @@ struct BrowserScreen: View {
             TextField(DeviceStore.defaultName(for: renaming?.host ?? ""), text: Binding(
                 get: { renaming?.name ?? "" }, set: { renaming?.name = $0 }
             ))
+            .textInputAutocapitalization(.never)
             Button("Save") {
                 if let renaming { devices.rename(renaming.host, to: renaming.name) }
                 renaming = nil
@@ -199,6 +202,23 @@ struct BrowserScreen: View {
                 }
                 .presentationDetents([.medium, .large])
             }
+        }
+        .onChange(of: offerToSavePasswords) { _, enabled in
+            if !enabled { session.passwordOffer = nil }
+        }
+        .alert("Save Password?", isPresented: Binding(
+            get: {
+                noticeAccepted && scenePhase == .active && sheet == nil && !showingSettings &&
+                !showingInfo && !editingAddress && !showingTabs && renaming == nil &&
+                session.passwordOffer != nil && session.message == nil &&
+                store.errorMessage == nil && devices.errorMessage == nil
+            },
+            set: { if !$0 { session.passwordOffer = nil } }
+        ), presenting: session.passwordOffer) { offer in
+            Button("Save") { session.savePassword(offer) }
+            Button("Not Now", role: .cancel) { session.passwordOffer = nil }
+        } message: { offer in
+            Text("Save the password for \(offer.username.isEmpty ? "this login" : offer.username) at \(offer.origin.label) in this device’s Keychain? Save replaces any saved password for this username and address. Not Now keeps the saved password unchanged.")
         }
         .alert("LAN Browser", isPresented: Binding(
             get: { sheet == nil && (session.message != nil || store.errorMessage != nil || devices.errorMessage != nil) },
@@ -735,7 +755,10 @@ private struct BookmarkEditor: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Title") { TextField("e.g. Home Server", text: $bookmark.title) }
+                Section("Title") {
+                    TextField("e.g. Home Server", text: $bookmark.title)
+                        .textInputAutocapitalization(.never)
+                }
                 Section {
                     TextField("e.g. 192.168.1.20:8080", text: $bookmark.url)
                         .keyboardType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled()

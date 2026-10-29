@@ -42,7 +42,7 @@
 		<string>_wled._tcp</string>
 	</array>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>LAN Browser connects to web apps on devices in your local network, such as your home server. If you turn on Local Network Features, it also finds web apps advertised on your network, checks whether your bookmarks are reachable, diagnoses connection problems, and, if you confirm it, checks common web ports on your network.</string>
+	<string>LAN Browser connects to web apps on devices in your local network, such as your home server. Password saving and AutoFill use this device’s Keychain and do not scan your network. If you turn on Local Network Features, it also finds web apps advertised on your network, checks whether your bookmarks are reachable, diagnoses connection problems, and, if you confirm it, checks common web ports on your network.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
