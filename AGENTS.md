@@ -4,7 +4,9 @@ Guidance for coding agents working in this repository.
 
 ## What this is
 
-LAN Browser is a small tabbed iPhone browser (SwiftUI + WebKit) for home-network web apps and captive-portal Wi-Fi. Plain HTTP is a feature, not a bug. There are no dependencies, no backend, and no analytics. It is meant only for trusted home networks, as the first-use notice says. Minimum iOS is **17.0** (pinned at project and target level). It builds with Xcode 27.1.
+LAN Browser is a small tabbed iPhone browser (SwiftUI + WebKit) for home-network web apps and captive-portal Wi-Fi. Plain HTTP is a feature, not a bug. There is no backend and no analytics. It is meant only for trusted home networks, as the first-use notice says. Minimum iOS is **17.0** (pinned at project and target level). It builds with current Xcode; there are no dependencies to install.
+
+This file doubles as the contributor guide: it describes the layout, commands and conventions that both people and coding agents should follow.
 
 ## Files
 
@@ -35,7 +37,8 @@ All app code is in `LANBrowser/`:
 Other locations:
 - `Tests/CoreChecks.swift` is a standalone `@main` executable using `precondition`. There is no XCTest target.
 - `Tests/serve_fixture.py` is a manual test server on port 8889.
-- `APP_STORE_SUBMISSION.md` is gitignored and local only.
+- `docs/TESTING.md` lists manual on-device checks.
+- `LICENSE` is MIT.
 
 ## Commands
 
@@ -97,4 +100,4 @@ There is no XCUITest target and simulator taps can’t be scripted here, so test
   - The first-use notice text (“For Trusted Home Networks”, `TrustedNetworkNotice`), which must match the top of the Using LAN Browser help page
   - `SUPPORT.md`
   - `NSLocalNetworkUsageDescription`
-  - `APP_STORE_SUBMISSION.md`
+  - `docs/TESTING.md`, when a manual check changes
