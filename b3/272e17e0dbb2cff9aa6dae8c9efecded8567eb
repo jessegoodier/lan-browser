@@ -1,0 +1,41 @@
+AGENTS.md
+  s_fcaf6d8f61edd8::t_ddf02badae7e3d 7-9
+  s_fcaf6d8f61edd8::t_0aa9c58c167936 40-41
+  s_fcaf6d8f61edd8::t_aab183ca3ecf71 103
+docs/TESTING.md
+  s_fcaf6d8f61edd8::t_87c8e92e3eeab1 1-65
+README.md
+  s_fcaf6d8f61edd8::t_42f1482b42a871 3,21,37-38,40,57,61-68,70,72-80,89,96,98,104,106,108,110,112,114,116,118,120,122,124-126
+  s_fcaf6d8f61edd8::t_fe956fe208ac9c 5
+  s_fcaf6d8f61edd8::t_051572c8796ee3 35
+  s_fcaf6d8f61edd8::t_7829a3cabc93b6 4
+LANBrowser/NetworkProbe.swift
+  s_fcaf6d8f61edd8::t_b68798cf63b0c2 196
+LICENSE
+  s_fcaf6d8f61edd8::t_b68798cf63b0c2 1-21
+Tests/CoreChecks.swift
+  s_fcaf6d8f61edd8::t_ea06ce7c1967af 87
+  s_fcaf6d8f61edd8::t_051572c8796ee3 84,125,143-144
+  s_fcaf6d8f61edd8::t_b68798cf63b0c2 89-93,122-124,129-136,138-140,153,210,214,217-218
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b3272e17e0dbb2cff9aa6dae8c9efecded8567eb",
+  "prompts": {},
+  "humans": {
+    "h_cca6aa2712613d": {
+      "author": "jesse goodier <31039225+jessegoodier@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_fcaf6d8f61edd8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7cf8c4a7-8146-495a-997d-64de232b8579",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "jesse goodier <31039225+jessegoodier@users.noreply.github.com>"
+    }
+  }
+}
