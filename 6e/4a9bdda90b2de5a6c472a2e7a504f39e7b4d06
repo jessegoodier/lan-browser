@@ -1,0 +1,99 @@
+LANBrowser/PasswordCapture.swift
+  s_95b1f86a709cd6::t_9d33b6c5aec4d8 60
+  s_95b1f86a709cd6::t_cd593d879e14b6 1-9,16-19,34-38,43-49,57,59,64-72,75-79,86-90,97-100
+  s_95b1f86a709cd6::t_293ccd495944e6 10-15,20-33,39-42,51-56,58,61-63,81-83,91-94
+  s_95b1f86a709cd6::t_1bf8022a08dd67 50,73-74,80,84-85,95-96
+Tests/serve_fixture.py
+  s_95b1f86a709cd6::t_9d33b6c5aec4d8 9,26-40,79-85
+Scripts/check.sh
+  s_95b1f86a709cd6::t_1bf8022a08dd67 9
+LANBrowser/BrowserModel.swift
+  s_95b1f86a709cd6::t_5dcb97f11f2601 185
+  s_95b1f86a709cd6::t_293ccd495944e6 200,204-207
+  s_95b1f86a709cd6::t_1bf8022a08dd67 151,186-187,198-199,201-203,208-212,223,245,254,303
+AGENTS.md
+  s_95b1f86a709cd6::t_2421f3c6b99667 21
+LANBrowser/BrowserTab.swift
+  s_95b1f86a709cd6::t_5dcb97f11f2601 337-340
+LANBrowser.xcodeproj/project.pbxproj
+  s_95b1f86a709cd6::t_d7f132b1bb07cd 36,69-70,112-113,219
+  s_95b1f86a709cd6::t_1bf8022a08dd67 32-35,65-68,114-117,220-223
+  s_95b1f86a709cd6::t_002d703e2cf165 37,218
+LANBrowser/PasswordStore.swift
+  s_95b1f86a709cd6::t_293ccd495944e6 3-5,7-14,39,41-43,47
+  s_95b1f86a709cd6::t_463c16eba24a46 63-65
+  s_95b1f86a709cd6::t_cd593d879e14b6 1-2,6,16-38,40,44-46,48-62,66,68-94
+  s_95b1f86a709cd6::t_385ba56f62e03c 15,67
+LANBrowser/BrowserScreen.swift
+  s_95b1f86a709cd6::t_1bf8022a08dd67 41,125,206-209,216,219,222
+  s_95b1f86a709cd6::t_293ccd495944e6 217-218,220-221
+  s_95b1f86a709cd6::t_463c16eba24a46 210-215
+  s_95b1f86a709cd6::t_5dcb97f11f2601 161,758-761
+LANBrowser/Info.plist
+  s_95b1f86a709cd6::t_2421f3c6b99667 45
+LANBrowser/PasswordPolicy.swift
+  s_95b1f86a709cd6::t_cd593d879e14b6 1-15,20-62
+  s_95b1f86a709cd6::t_c43db9ff9b5912 16-19
+LANBrowser/SavedPasswordsView.swift
+  s_95b1f86a709cd6::t_1bf8022a08dd67 1-44,46-64
+  s_95b1f86a709cd6::t_4ad6329f3d4a08 45
+LANBrowser/SettingsView.swift
+  s_95b1f86a709cd6::t_2421f3c6b99667 159
+  s_95b1f86a709cd6::t_1bf8022a08dd67 15,40-41,43-44,46-47,87,112
+  s_95b1f86a709cd6::t_c3a3dd393c993a 14,42,45,127
+README.md
+  s_95b1f86a709cd6::t_2421f3c6b99667 158
+  s_95b1f86a709cd6::t_1bf8022a08dd67 155-157
+Tests/password_capture_checks.js
+  s_95b1f86a709cd6::t_d8e13f1b71b861 17,48-60
+  s_95b1f86a709cd6::t_9d33b6c5aec4d8 1-16,18-47,61
+Tests/password_autofill_checks.js
+  s_95b1f86a709cd6::t_60ed00ff495acf 1-76
+SUPPORT.md
+  s_95b1f86a709cd6::t_1bf8022a08dd67 20-21,23
+  s_95b1f86a709cd6::t_2421f3c6b99667 22
+docs/TESTING.md
+  s_95b1f86a709cd6::t_6ddb54693c5d73 97
+  s_95b1f86a709cd6::t_1bf8022a08dd67 89-91,95-96,98-101,103
+  s_95b1f86a709cd6::t_5dcb97f11f2601 92
+  s_95b1f86a709cd6::t_2421f3c6b99667 93,102,104-108
+  s_95b1f86a709cd6::t_463c16eba24a46 94
+LANBrowser/privacy_policy.md
+  s_95b1f86a709cd6::t_2421f3c6b99667 2,17
+  s_95b1f86a709cd6::t_1bf8022a08dd67 16
+  s_95b1f86a709cd6::t_22b5bb6530eb3d 18
+LANBrowser/FormInputBehavior.swift
+  s_95b1f86a709cd6::t_5dcb97f11f2601 1-2,4-40
+  s_95b1f86a709cd6::t_2ab3ec0807156f 3
+Tests/PasswordSaveChecks.swift
+  s_95b1f86a709cd6::t_dd50c51ac63005 2-132
+  s_95b1f86a709cd6::t_3da4f1f3a0d7d6 1
+.github/workflows/ci.yml
+  s_95b1f86a709cd6::t_6f3ab181646546 32-36
+Tests/CoreChecks.swift
+  s_95b1f86a709cd6::t_1bf8022a08dd67 12-23
+  s_95b1f86a709cd6::t_60ed00ff495acf 24-36
+LANBrowser/PasswordAutofill.swift
+  s_95b1f86a709cd6::t_9e3d680c897f62 1-123
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6e4a9bdda90b2de5a6c472a2e7a504f39e7b4d06",
+  "prompts": {},
+  "humans": {
+    "h_cca6aa2712613d": {
+      "author": "jesse goodier <31039225+jessegoodier@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_95b1f86a709cd6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a18564-ae04-7252-a40c-9a0b040b2a42",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "jesse goodier <31039225+jessegoodier@users.noreply.github.com>"
+    }
+  }
+}
