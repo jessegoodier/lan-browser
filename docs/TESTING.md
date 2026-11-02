@@ -16,6 +16,7 @@ Automated checks run with `Scripts/check.sh`; see the [README](../README.md#test
 - Navigate between pages, and check Back, Forward, Reload, Stop, and swipe navigation. A new-window link should open in a new tab.
 - Enter an HTTPS page and test a server’s HTTP-to-HTTPS redirect. The address bar should reflect the resulting address.
 - Tabs: tap a bookmark and confirm it opens in a new tab, and that opening one from a blank tab fills that tab. Create and close tabs from the Tabs switcher and from the Tabs button’s long-press menu. Set **Open Bookmarks In** to Current Tab and confirm a bookmark replaces the current page.
+- Return to the list: with **Open Bookmarks In** set to New Tab, open a discovered device, tap **Done**, and confirm the list shows and the tab count is back to what it was before the tap. Repeat with **Back**. With Current Tab, confirm Done and Back show the list in the same tab. On iPhone, confirm the navigation bar with Done appears only on these pages and the page title is shown.
 - Open a few tabs with some history, force-quit, and relaunch. The tabs should return, and a restored tab should load only when you switch to it. Turn **Restore Tabs on Launch** off, relaunch, and confirm tabs are not restored.
 
 ## Bookmarks

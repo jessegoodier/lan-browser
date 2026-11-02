@@ -33,7 +33,7 @@ struct SettingsView: View {
                     }
                     Toggle("Restore Tabs on Launch", isOn: $restoreTabs)
                 } header: { Text("Browsing") } footer: {
-                    Text("A bookmark always fills a blank tab. When tabs are restored, their addresses and Back history are saved on this device.")
+                    Text("A bookmark always fills a blank tab. Tap Done or Back on a page opened from the list to return to the list, and a tab opened just for that page closes. When tabs are restored, their addresses and Back history are saved on this device.")
                 }
                 .onChange(of: restoreTabs) { _, _ in session.saveTabs() }
 
