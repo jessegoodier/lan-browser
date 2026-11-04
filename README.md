@@ -20,7 +20,7 @@ LAN Browser is intended exclusively for use on trusted home networks. It isn’t
 - Downloads through WebKit followed by **Save to Files**, with a destination choice for each file. Files are temporarily staged in the app and cleaned up after export or cancellation.
 - System appearance, accessible control labels, and portrait/landscape layouts.
 
-The **Bookmarks** (book) button opens the bookmark list; while it is showing, the globe button returns to the current page. Swipe right on a bookmark or long-press it to edit; the long-press menu also has **Rename Device…**. Swipe left to delete, or tap **Edit** to delete or reorder.
+The **Bookmarks** (book) button opens the bookmark list; while it is showing, the **Return to Page** (curved arrow) button returns to the current page. Swipe right on a bookmark or long-press it to edit; the long-press menu also has **Rename Device…**. Swipe left to delete, or tap **Edit** to delete or reorder.
 
 ## iPad and Mac
 
