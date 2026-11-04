@@ -9,6 +9,7 @@ struct DiscoveredService: Identifiable, Codable, Equatable, Sendable {
     var address: String?
     /// Nil in scans saved before port scanning existed, which were all Bonjour.
     var foundBy: Source? = nil
+    var faviconPNG: Data? = nil
     var id: String { url.absoluteString }
 
     enum Source: String, Codable, Sendable {

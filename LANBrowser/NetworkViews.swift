@@ -12,6 +12,22 @@ extension HostDevice {
     }
 }
 
+struct SiteIcon: View {
+    let data: Data?
+
+    var body: some View {
+        Group {
+            if let data, let image = UIImage(data: data) {
+                Image(uiImage: image).resizable().scaledToFit()
+            } else {
+                Image(systemName: "network").font(.title3).foregroundStyle(.tint)
+            }
+        }
+        .frame(width: 24, height: 24)
+        .accessibilityHidden(true)
+    }
+}
+
 struct LocalNetworkCard: View {
     let turnOn: () -> Void
     let notNow: () -> Void
@@ -69,7 +85,10 @@ struct DiscoveredSection: View {
                     HStack(spacing: 12) {
                         Button { open(service) } label: {
                             HStack(spacing: 12) {
-                                StatusDot(state: network.serviceStatus[service.id])
+                                SiteIcon(data: service.faviconPNG)
+                                    .overlay(alignment: .bottomTrailing) {
+                                        StatusDot(state: network.serviceStatus[service.id])
+                                    }
                                 VStack(alignment: .leading, spacing: 2) {
                                     HStack(spacing: 6) {
                                         Text(service.name).font(.subheadline.weight(.semibold)).foregroundStyle(.primary)
@@ -206,7 +225,7 @@ struct PortScanConfirmationSheet: View {
                         .padding(.vertical, 4)
                     }
                     Section {
-                        Text("First, ports 80 and 443 are tried on each address to find devices that are on (about \(plan.discoveryConnections.formatted()) connections). Then the ports above are tried on those devices, and any that answer as a web page are listed. A scan usually takes 10–30 seconds.")
+                        Text("Every port above is tried on every address in the range (\(plan.connectionCount.formatted()) connections). Any that answer as a web page are listed, even if ports 80 and 443 don’t respond. Large scans can take several minutes. You can cancel a scan and keep the previous results.")
                         Text("Runs only when you tap Scan Again or pull down on the bookmark list. Nothing is sent outside your network.")
                     }
                 } else {

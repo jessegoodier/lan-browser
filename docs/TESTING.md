@@ -24,6 +24,14 @@ Automated checks run with `Scripts/check.sh`; see the [README](../README.md#test
 - Add a home-service bookmark such as `192.168.1.20:8080`, open it, and verify the service loads over HTTP.
 - Add, edit, reorder, and delete bookmarks. Force-quit and relaunch: the edited list should survive, and the app should open bookmarks. Deleting every bookmark should leave an empty list after relaunch.
 
+- Save `http://fixture.local`, then try `HTTP://FIXTURE.local:80/`: Add should show the existing bookmark for editing. Editing a different bookmark to that URL must show an error. Different schemes, paths, query strings and fragments remain separate.
+- Seed duplicate URLs in `bookmarks.json`, relaunch, and confirm only the first entry remains in its original position. Check the adjacent `bookmarks-before-deduplication-<UUID>.json` backup contains the original file.
+- With Local Network Features off, save a fixture bookmark and confirm its icon appears without delaying Save. Denied Local Network permission must still allow saving with the fallback symbol. Reopen the list and relaunch: the cached icon should remain without icon requests.
+- Save bookmarks from Bonjour and a confirmed port scan. Stop their servers, refresh the scan, cancel another scan, clear results, and turn discovery off. Every saved bookmark must remain after relaunch.
+- Check bookmark and discovery icons with status dots on iPhone and iPad, including large text and dark mode. Scan results with icons should transfer those icons to newly saved bookmarks.
+- Use `/icons/relative`, `/icons/fallback`, `/icons/missing`, `/icons/malformed`, `/icons/oversized`, `/icons/redirect`, `/icons/external`, and `/icons/delayed` on the fixture. Valid icons appear; failures use the network symbol. Check server logs for no requests to the external icon destination. Delete a bookmark or change its URL during a delayed response; the late icon must not restore or alter it. Cancel a scan or background the app during delayed responses; old results must not reappear.
+- A self-signed HTTPS site can still open as before, but its icon must use the fallback because icon fetching does not override certificate trust.
+
 ## Errors and certificates
 
 - Visit an unreachable address, then use **Edit Address** or **Retry** to recover. Tap **Diagnose** and confirm the failing step and advice make sense. Try a closed port, a misspelled `.local` name, and a self-signed HTTPS device.
@@ -37,9 +45,11 @@ Automated checks run with `Scripts/check.sh`; see the [README](../README.md#test
 - Relaunch the app. The saved scan should appear with its scan time, and no new scan should start. **Scan Again** or a pull down on the bookmark list should start one. On a Mac, use Scan Again, since there is no pull down.
 - Deny the permission in the Settings app (System Settings on a Mac) and confirm the list and diagnostics explain how to turn it back on. Turn the switch off and confirm the list and dots disappear.
 - On a clean install, turn on **Local Network Features** for the first time. The automatic first scan never port-scans, so its scan line should show Bonjour only.
-- Pick **Common Web Apps** in **Settings › Local Network › Port Scan**. Confirm the sheet shows the right address range, the 22 ports, and the connection count, and that **Cancel** reverts the picker. Choose it again and tap **Confirm**.
+- Pick **Common Web Apps** in **Settings › Local Network › Port Scan**. Confirm the sheet shows the right address range, the 22 ports, and the connection count (addresses × 22), and that **Cancel** reverts the picker. Choose it again and tap **Confirm**.
 - After confirming, tap **Scan Again**. Progress should appear with a **Cancel** button, and web apps that don’t advertise over Bonjour should be listed with a “port scan” tag. Relaunch the app: the saved results should appear with their scan time, and no new scan should start. Start another scan and tap **Cancel** partway through. The previous list should remain.
+- Run a web server on port 8888 on a host in the confirmed range that silently drops connections to 80 and 443 and does not advertise Bonjour. Confirm **Common Web Apps**, then **Scan Again**. The service must appear after the scan finishes, even though both standard web ports time out. **Standard Web** must not probe 8888. Confirm progress counts every selected port on every address; allow several minutes on large ranges.
 - Rename a device from Page Info (ⓘ), then rename one from a bookmark’s long-press menu with **Rename Device…**. Confirm every bookmark on that host updates. Tap **+** on a discovered device and confirm the new bookmark uses a `.local` URL.
+- Check bookmark/discovery labels and Page Info endpoint details with implicit HTTP/HTTPS ports, explicit port 8888, a remembered IP and IPv6. Every displayed endpoint includes its port, including 80 and 443; IPv6 uses brackets. Renaming a device keeps its port visible.
 - To test discovery without a home server, use the test fixture described below.
 
 ## Downloads
@@ -107,3 +117,19 @@ Run `node Tests/password_capture_checks.js` and `node Tests/password_autofill_ch
 - Save two usernames for one origin. A blank form should fill the most recently saved account. Enter the other saved username; its password should fill. An unknown username must not receive another account’s password. Changing an automatically filled username must clear its old automatic password. A password you type or clear manually must not be overwritten.
 - Turn **AutoFill Saved Passwords** off and reload: fields must stay empty, while offers to save remain on. Turn save offers off independently: saved entries can still fill while AutoFill is on. Confirm embedded frames, hidden forms and registration forms do not receive credentials. Test a slow page load while typing and while navigating to a different host; a late reply must not overwrite input or cross origins.
 - Debug builds emit fixed event names and Keychain status codes under subsystem `com.jesse.lanbrowser`, category `passwords`. No usernames, passwords, hosts or page text are included in these password diagnostics. `Tests/PasswordSaveChecks.swift` is a standalone simulator app that checks real Keychain writes, dismissal before Save, Not Now, replacements, native WebKit AutoFill, origin separation, the AutoFill setting and dynamically inserted forms. It uses a loopback fixture on port 8893.
+
+### Favicon request checks
+
+`Scripts/check_favicons.sh` builds the native favicon and discovery code for macOS and checks bookmark/discovery storage isolation without network requests. For integration coverage, start the normal fixture plus a second fixture with a root favicon:
+
+```sh
+python3 Tests/serve_fixture.py --port 8890 --fallback-icon
+```
+
+With both servers running, run:
+
+```sh
+Scripts/check_favicons.sh http://127.0.0.1:8889 http://127.0.0.1:8890
+```
+
+This additionally exercises enabled discovery refresh/cancellation, direct icon requests, relative links, same-origin redirects, chunked responses, malformed and oversized images, cancellation of shared requests, deletion during a pending request, and the root favicon fallback. The default fixture has no root icon so failure cases use the network symbol; `--fallback-icon` enables `/favicon.ico` for the fallback check.
