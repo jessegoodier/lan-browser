@@ -279,7 +279,39 @@ final class BrowserSession: NSObject, ObservableObject {
     @discardableResult
     func openBookmark(_ input: String) -> Bool {
         let preference = OpenBookmarksIn(rawValue: UserDefaults.standard.string(forKey: OpenBookmarksIn.defaultsKey) ?? "") ?? .newTab
-        return open(input, newTab: TabPolicy.opensNewTab(currentTabIsBlank: selectedTab.isBlank, preference: preference))
+        return openFromList(input, newTab: TabPolicy.opensNewTab(currentTabIsBlank: selectedTab.isBlank, preference: preference))
+    }
+
+    /// Opens a row from the bookmark or discovery list, remembering the list so Back and Done can return to it.
+    @discardableResult
+    func openFromList(_ input: String, newTab: Bool) -> Bool {
+        let opener = selectedTab
+        guard open(input, newTab: newTab) else { return false }
+        selectedTab.listOrigin = newTab ? .newTab(opener: opener.id) : .sameTab
+        return true
+    }
+
+    /// Back goes to the list once the page has no earlier history of its own.
+    func returnsToList(_ tab: BrowserTab) -> Bool {
+        !tab.canGoBack && tab.listOrigin != nil
+    }
+
+    func goBack(_ tab: BrowserTab) {
+        if returnsToList(tab) { returnToList(from: tab) } else { tab.back() }
+    }
+
+    /// A tab opened only for the page closes, and the tab that showed the list is selected again.
+    func returnToList(from tab: BrowserTab) {
+        guard let origin = tab.listOrigin else { return }
+        tab.listOrigin = nil
+        if case .newTab(let openerID) = origin, openerID != tab.id,
+           let opener = tabs.first(where: { $0.id == openerID }) {
+            // Select the opener first so closing this tab doesn't pick a neighbour.
+            select(opener)
+            close(tab)
+        } else {
+            tab.showingStartPage = true
+        }
     }
 
     /// Saves open tabs shortly after a change, so a burst of navigations writes once.

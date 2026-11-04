@@ -100,9 +100,9 @@ struct BrowserScreen: View {
             }
             .overlay(alignment: .top) { loadingIndicator }
             .overlay(alignment: .bottom) { downloadIndicator }
-            .navigationTitle("LAN Browser")
-            .navigationBarTitleDisplayMode(usesTopBar && !tab.showingStartPage ? .inline : .automatic)
-            .toolbar(tab.showingStartPage || usesTopBar ? .visible : .hidden, for: .navigationBar)
+            .navigationTitle(listPageTitle ?? "LAN Browser")
+            .navigationBarTitleDisplayMode((usesTopBar || showsDone) && !tab.showingStartPage ? .inline : .automatic)
+            .toolbar(tab.showingStartPage || usesTopBar || showsDone ? .visible : .hidden, for: .navigationBar)
             .toolbar { browserToolbar }
         }
         .focusedSceneValue(\.browserActions, browserActions)
@@ -246,7 +246,7 @@ struct BrowserScreen: View {
     private func openAlternate(_ input: String) {
         editingAddress = false
         addressFocused = false
-        session.open(input, newTab: openPreference != .newTab)
+        session.openFromList(input, newTab: openPreference != .newTab)
     }
 
     private var bookmarksHome: some View {
@@ -371,9 +371,18 @@ struct BrowserScreen: View {
 
     private var returnsToPage: Bool { tab.showingStartPage && !tab.address.isEmpty }
 
+    /// A page opened from the list shows a Done button that returns to the list.
+    private var showsDone: Bool { !tab.showingStartPage && tab.listOrigin != nil }
+
+    private var listPageTitle: String? {
+        guard showsDone else { return nil }
+        return tab.title.isEmpty ? tab.address : tab.title
+    }
+
     @ToolbarContentBuilder private var browserToolbar: some ToolbarContent {
         if usesTopBar {
             ToolbarItemGroup(placement: .topBarLeading) {
+                if showsDone { doneButton }
                 backButton
                 forwardButton
                 if tab.showingStartPage { EditButton().disabled(store.bookmarks.isEmpty) }
@@ -391,6 +400,9 @@ struct BrowserScreen: View {
                 tabsMenu
             }
         } else {
+            if showsDone {
+                ToolbarItem(placement: .topBarLeading) { doneButton }
+            }
             if tab.showingStartPage {
                 ToolbarItem(placement: .topBarLeading) { EditButton().disabled(store.bookmarks.isEmpty) }
                 ToolbarItem(placement: .topBarTrailing) {
@@ -417,8 +429,13 @@ struct BrowserScreen: View {
     }
 
     private var backButton: some View {
-        Button("Back", systemImage: "chevron.left") { tab.back() }
-            .disabled(!tab.canGoBack || tab.showingStartPage)
+        Button(session.returnsToList(tab) ? "Back to List" : "Back", systemImage: "chevron.left") { session.goBack(tab) }
+            .disabled(!(tab.canGoBack || tab.listOrigin != nil) || tab.showingStartPage)
+    }
+
+    private var doneButton: some View {
+        Button("Done") { session.returnToList(from: tab) }
+            .fontWeight(.semibold)
     }
 
     private var forwardButton: some View {
@@ -488,7 +505,7 @@ struct BrowserScreen: View {
     private var browserActions: BrowserActions {
         BrowserActions(
             enabled: noticeAccepted && sheet == nil && !editingAddress && !showingInfo && !showingSettings && !showingTabs,
-            canGoBack: tab.canGoBack && !tab.showingStartPage,
+            canGoBack: (tab.canGoBack || tab.listOrigin != nil) && !tab.showingStartPage,
             canGoForward: tab.canGoForward && !tab.showingStartPage,
             hasPage: !tab.showingStartPage && !tab.address.isEmpty,
             isLoading: tab.isLoading
@@ -502,7 +519,7 @@ struct BrowserScreen: View {
         case .closeTab: session.close(tab)
         case .reload: if !tab.isLoading { tab.reloadOrStop() }
         case .stop: if tab.isLoading { tab.reloadOrStop() }
-        case .back: tab.back()
+        case .back: session.goBack(tab)
         case .forward: tab.forward()
         case .addBookmark: newBookmark()
         case .showTabs: showTabs()

@@ -3,12 +3,21 @@ import Foundation
 import UIKit
 import WebKit
 
+/// Where a page opened from the bookmark or discovery list came from. Kept in memory only,
+/// so a restored tab behaves as it did before.
+enum ListOrigin: Equatable {
+    case sameTab
+    case newTab(opener: UUID)
+}
+
 /// One tab: its web view, navigation state and page errors. The web view is created on
 /// first use, so restored tabs cost nothing until they are selected.
 @MainActor
 final class BrowserTab: NSObject, ObservableObject, Identifiable {
     let id: UUID
     @Published var showingStartPage: Bool
+    /// Set when the page was opened from the list, so Back and Done can return to it.
+    @Published var listOrigin: ListOrigin?
     @Published private(set) var address = ""
     @Published private(set) var title = ""
     @Published private(set) var canGoBack = false
@@ -162,6 +171,7 @@ final class BrowserTab: NSObject, ObservableObject, Identifiable {
         address = url.absoluteString
         pageError = nil
         showingStartPage = false
+        listOrigin = nil
         webView.load(URLRequest(url: url))
     }
 

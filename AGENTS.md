@@ -19,7 +19,7 @@ All app code is in `LANBrowser/`:
 | `LANBrowserApp.swift` | App entry point and `BrowserCommands` (menu bar items and keyboard shortcuts) |
 | `BrowserScreen.swift` | Main screen, toolbars (bottom on iPhone, top with an inline address field on iPad at regular width), bookmark list, sheets (Page Info, bookmark editor, rename alert). Also `BrowserLayout`, and `BrowserCommand`/`BrowserActions`, the focused scene value the menu commands act through |
 | `BrowserModel.swift` | `BrowserSession`: tabs, selection, downloads and export queue, tab saving, clear website data. Also `PageInfo` and debug-only `PageDiagnostics` |
-| `BrowserTab.swift` | One tab: lazy `WKWebView`, navigation state, page errors, new-window links (open a new tab), JS dialogs |
+| `BrowserTab.swift` | One tab: lazy `WKWebView`, navigation state, page errors, new-window links (open a new tab), JS dialogs, and in-memory `ListOrigin` (a page opened from the bookmark list, for Done and Back) |
 | `FormInputBehavior.swift` | Disables automatic capitalization in page forms, including dynamically inserted fields |
 | `PasswordPolicy.swift` / `PasswordStore.swift` / `PasswordCapture.swift` / `PasswordAutofill.swift` / `SavedPasswordsView.swift` | Password origin rules, device-only Keychain storage, isolated login-form capture and AutoFill, and Settings management |
 | `TabStore.swift` | `SavedTab`/`SavedTabs` in tabs.json, `TabPolicy`, `OpenBookmarksIn` |
