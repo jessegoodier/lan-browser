@@ -438,7 +438,7 @@ struct BrowserScreen: View {
             Button("Add Bookmark", systemImage: "bookmark") { newBookmark() }
                 .disabled(tab.address.isEmpty)
         } label: {
-            Label(returnsToPage ? "Return to Page" : "Bookmarks", systemImage: returnsToPage ? "globe" : "book")
+            Label(returnsToPage ? "Return to Page" : "Bookmarks", systemImage: returnsToPage ? "arrow.uturn.backward" : "book")
         } primaryAction: {
             editingAddress = false
             addressFocused = false
