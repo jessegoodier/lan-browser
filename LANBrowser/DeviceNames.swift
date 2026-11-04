@@ -60,13 +60,20 @@ final class DeviceStore: ObservableObject {
         Self.isIPAddress(host) ? nil : records[Self.key(host)]?.address
     }
 
-    /// `name:port/path · IP`, omitting default ports, a bare `/` path, and an IP equal to the host.
+    nonisolated static func endpointLabel(host: String, port: Int) -> String {
+        let host = host.contains(":") ? "[\(host.trimmingCharacters(in: CharacterSet(charactersIn: "[]")))]" : host
+        return "\(host):\(port)"
+    }
+
+    /// `name:port/path · IP:port`, omitting a bare `/` path and an IP equal to the host.
     func label(for url: URL, address fallback: String? = nil) -> String {
         guard let host = url.host else { return url.absoluteString }
-        var label = name(for: host)
-        if let port = url.port, port != (url.scheme?.lowercased() == "https" ? 443 : 80) { label += ":\(port)" }
+        let port = ServiceCatalog.port(of: url)
+        var label = Self.endpointLabel(host: name(for: host), port: port)
         if !url.path.isEmpty && url.path != "/" { label += url.path }
-        if let address = address(for: host) ?? fallback, Self.key(address) != Self.key(host) { label += " · \(address)" }
+        if let address = address(for: host) ?? fallback, Self.key(address) != Self.key(host) {
+            label += " · " + Self.endpointLabel(host: address, port: port)
+        }
         return label
     }
 
