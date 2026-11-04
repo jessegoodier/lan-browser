@@ -1,0 +1,34 @@
+README.md
+  s_9baef62af66abc::t_ac99b655387def 23
+LANBrowser/BrowserScreen.swift
+  s_a6f5ff8ad1846c::t_a9a588d949b36b 441
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f165cfedc322da3f9dbd4b05af99583a2c0f3c06",
+  "prompts": {},
+  "humans": {
+    "h_cca6aa2712613d": {
+      "author": "jesse goodier <31039225+jessegoodier@users.noreply.github.com>"
+    }
+  },
+  "sessions": {
+    "s_9baef62af66abc": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1a428-c62b-7821-bdba-de41da169584",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "jesse goodier <31039225+jessegoodier@users.noreply.github.com>"
+    },
+    "s_a6f5ff8ad1846c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c4869ea2-5dcb-4394-b1ac-07d207120778",
+        "model": "unknown"
+      },
+      "human_author": "jesse goodier <31039225+jessegoodier@users.noreply.github.com>"
+    }
+  }
+}
