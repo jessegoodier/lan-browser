@@ -1,0 +1,99 @@
+SUPPORT.md
+  s_9baef62af66abc::t_ac99b655387def 26-31
+  s_4586d6f426f253::t_822b6c281762db 18
+LANBrowser/LocalNetwork.swift
+  s_9baef62af66abc::t_b5ee4edf6116b5 79-82,113-116,188,203,217,270-271,312,324,382-414,430
+  s_4586d6f426f253::t_9cb84e566b0b7b 485-486,496
+LANBrowser/PortScan.swift
+  s_4586d6f426f253::t_59cc8a9f1cf2b4 147
+  s_4586d6f426f253::t_9cb84e566b0b7b 92-99
+LANBrowser/BrowserScreen.swift
+  s_9baef62af66abc::t_b5ee4edf6116b5 180-183,269,319-325,554-565,569-573,772-773,776,793-794,809-814
+  s_4586d6f426f253::t_59cc8a9f1cf2b4 667-669,725
+LANBrowser/NetworkViews.swift
+  s_4586d6f426f253::t_9cb84e566b0b7b 228
+  s_9baef62af66abc::t_b5ee4edf6116b5 15-30,88-91
+docs/TESTING.md
+  s_4586d6f426f253::t_c1663a69d3ea05 51
+  s_9baef62af66abc::t_ac99b655387def 26-33
+  s_4586d6f426f253::t_822b6c281762db 47,49
+  s_4586d6f426f253::t_cba6023ba1d12c 119-134
+LANBrowser/Address.swift
+  s_9baef62af66abc::t_bd40c76aa34a9f 5-14
+LANBrowser/FaviconLoader.swift
+  s_9baef62af66abc::t_40adb332680f22 1-95,97-180
+  s_9baef62af66abc::t_b5ee4edf6116b5 96
+LANBrowser/DeviceNames.swift
+  s_4586d6f426f253::t_59cc8a9f1cf2b4 63-68,71-72,74-76
+LANBrowser/FaviconPolicy.swift
+  s_9baef62af66abc::t_40adb332680f22 1-127
+LANBrowser.xcodeproj/project.pbxproj
+  s_9baef62af66abc::t_b5ee4edf6116b5 38-39,73-74,97-98,205-206
+  s_a6f5ff8ad1846c::t_de72592365da9a 285,296,314,325
+LANBrowser/Info.plist
+  s_4586d6f426f253::t_822b6c281762db 45
+LANBrowser/SettingsView.swift
+  s_4586d6f426f253::t_822b6c281762db 68,77,127
+  s_9baef62af66abc::t_ac99b655387def 36,159
+AGENTS.md
+  s_4586d6f426f253::t_822b6c281762db 35,104
+  s_4586d6f426f253::t_91a9dcdc9f5d03 11-12,23,27-28,30,44-46,58-60,89,94,106
+  s_4586d6f426f253::t_c1663a69d3ea05 29,96
+  s_9baef62af66abc::t_2bde1af06080ed 39
+LANBrowser/privacy_policy.md
+  s_9baef62af66abc::t_ac99b655387def 11,22-24
+  s_4586d6f426f253::t_822b6c281762db 2,26
+Scripts/check_favicons.sh
+  s_9baef62af66abc::t_622080cf8e208f 1-12
+Tests/FaviconChecks.swift
+  s_9baef62af66abc::t_622080cf8e208f 1-93
+README.md
+  s_4586d6f426f253::t_822b6c281762db 67,69
+  s_4586d6f426f253::t_c1663a69d3ea05 25-26
+  s_9baef62af66abc::t_ac99b655387def 18,27-29
+  s_a6f5ff8ad1846c::t_f5bd7055b90875 30
+LANBrowser/Bookmarks.swift
+  s_9baef62af66abc::t_bd40c76aa34a9f 8,10,14,25,34-49,51,62-65,67-71,80-90,106
+LANBrowser/ServiceCatalog.swift
+  s_9baef62af66abc::t_bd40c76aa34a9f 12
+Scripts/check.sh
+  s_9baef62af66abc::t_b5ee4edf6116b5 9
+Tests/CoreChecks.swift
+  s_4586d6f426f253::t_8da0a606979fc2 268-269,271,274,278,280-286,358
+  s_4586d6f426f253::t_eba3fe67828436 328-336
+  s_4586d6f426f253::t_ddf5ea010b7ce4 85-188
+Tests/serve_fixture.py
+  s_9baef62af66abc::t_cca7ae48370a35 5-7,28-36,38-92,109-111,169-173,175-177
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "00a13aa9f71e17debe7f2d045b6895fd12156bc9",
+  "prompts": {},
+  "sessions": {
+    "s_4586d6f426f253": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1a43c-f16e-7693-bc02-a688b17ebc4d",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "jesse goodier <31039225+jessegoodier@users.noreply.github.com>"
+    },
+    "s_9baef62af66abc": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1a428-c62b-7821-bdba-de41da169584",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "jesse goodier <31039225+jessegoodier@users.noreply.github.com>"
+    },
+    "s_a6f5ff8ad1846c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c4869ea2-5dcb-4394-b1ac-07d207120778",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "jesse goodier <31039225+jessegoodier@users.noreply.github.com>"
+    }
+  }
+}
