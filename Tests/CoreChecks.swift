@@ -157,6 +157,9 @@ struct CoreChecks {
         let iconHTML = """
         <!-- <link rel="icon" href="/comment.png"> -->
         <script>const text = '<link rel="icon" href="/script.png">';</script>
+        <SCRIPT>const other = '<link rel="icon" href="/script2.png">';</script
+         bar>
+        <!-- <link rel="icon" href="/bang.png"> --!>
         <LINK HREF='../images/icon.png?a=1&amp;b=2' REL='shortcut ICON'>
         <link href="http://external.local/icon.png" rel=icon>
         <link href="//fixture.local:80/second.ico" rel=icon>

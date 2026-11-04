@@ -18,7 +18,7 @@ enum FaviconPolicy {
     }
 
     static func candidates(in html: String, page: URL) -> [URL] {
-        let cleaned = html.replacingOccurrences(of: "(?is)<!--.*?-->|<script\\b[^>]*>.*?</script\\s*>", with: "", options: .regularExpression)
+        let cleaned = html.replacingOccurrences(of: "(?is)<!--.*?--!?>|<script\\b[^>]*>.*?</script\\b[^>]*>", with: "", options: .regularExpression)
         let links = try! NSRegularExpression(pattern: "(?is)<link\\b(?:[^>\"']|\"[^\"]*\"|'[^']*')*>")
         let attributes = try! NSRegularExpression(pattern: #"(?is)([\w-]+)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))"#)
         var urls: [URL] = []
