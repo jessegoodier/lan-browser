@@ -275,23 +275,18 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1.2.1;
-				DEVELOPMENT_TEAM = 849MX4JKV6;
+				DEVELOPMENT_TEAM = 3Z97LF548X;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = LANBrowser/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "LAN Browser";
-				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_CFBundleDisplayName = LANBrowser;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
-				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "LAN Browser connects to web apps on devices in your local network, such as your home server. Password saving and AutoFill use this device’s Keychain and do not scan your network. If you turn on Local Network Features, it also finds web apps advertised on your network, checks whether your bookmarks are reachable, diagnoses connection problems, and, if you confirm it, checks common web ports on your network.";
-				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleDarkContent;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.2.1;
-				PRODUCT_BUNDLE_IDENTIFIER = ai.makesmart.lanbrowser;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jesse.lanbrowser;
 				PRODUCT_NAME = "LAN Browser";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -309,23 +304,18 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1.2.1;
-				DEVELOPMENT_TEAM = 849MX4JKV6;
+				DEVELOPMENT_TEAM = 3Z97LF548X;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = LANBrowser/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "LAN Browser";
-				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_CFBundleDisplayName = LANBrowser;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
-				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "LAN Browser connects to web apps on devices in your local network, such as your home server. Password saving and AutoFill use this device’s Keychain and do not scan your network. If you turn on Local Network Features, it also finds web apps advertised on your network, checks whether your bookmarks are reachable, diagnoses connection problems, and, if you confirm it, checks common web ports on your network.";
-				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleDarkContent;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.2.1;
-				PRODUCT_BUNDLE_IDENTIFIER = ai.makesmart.lanbrowser;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jesse.lanbrowser;
 				PRODUCT_NAME = "LAN Browser";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
