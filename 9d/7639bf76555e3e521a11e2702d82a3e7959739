@@ -1,0 +1,21 @@
+LANBrowser.xcodeproj/project.pbxproj
+  s_a6f5ff8ad1846c::t_3304115ae53d21 278,281,289,307,310,318
+LANBrowser/Info.plist
+  s_a6f5ff8ad1846c::t_808d9610afd30a 5-24,44-45,53-68
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9d7639bf76555e3e521a11e2702d82a3e7959739",
+  "prompts": {},
+  "sessions": {
+    "s_a6f5ff8ad1846c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c4869ea2-5dcb-4394-b1ac-07d207120778",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "jesse goodier <31039225+jessegoodier@users.noreply.github.com>"
+    }
+  }
+}
