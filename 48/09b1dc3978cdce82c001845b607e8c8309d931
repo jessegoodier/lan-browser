@@ -1,0 +1,23 @@
+AGENTS.md
+  s_a6f5ff8ad1846c::t_2d424415a6653e 22
+LANBrowser/BrowserScreen.swift
+  s_a6f5ff8ad1846c::t_b9b2903373f434 443
+README.md
+  s_a6f5ff8ad1846c::t_d8999e09080e62 17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "4809b1dc3978cdce82c001845b607e8c8309d931",
+  "prompts": {},
+  "sessions": {
+    "s_a6f5ff8ad1846c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c4869ea2-5dcb-4394-b1ac-07d207120778",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "jesse goodier <31039225+jessegoodier@users.noreply.github.com>"
+    }
+  }
+}
