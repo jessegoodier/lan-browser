@@ -33,7 +33,7 @@ struct SettingsView: View {
                     }
                     Toggle("Restore Tabs on Launch", isOn: $restoreTabs)
                 } header: { Text("Browsing") } footer: {
-                    Text("A bookmark always fills a blank tab. Tap Done or Back on a page opened from the list to return to the list, and a tab opened just for that page closes. When tabs are restored, their addresses and Back history are saved on this device.")
+                    Text("A bookmark always fills a blank tab. Tap Done or Back on a page opened from the list to return to the list, and a tab opened just for that page closes. Saving a bookmark may contact its site for an icon, even with Local Network Features off. When tabs are restored, their addresses and Back history are saved on this device.")
                 }
                 .onChange(of: restoreTabs) { _, _ in session.saveTabs() }
 
@@ -65,7 +65,7 @@ struct SettingsView: View {
                             ForEach(PortScanPreset.allCases) { Text("\($0.title) (\($0.summary))").tag($0) }
                         }
                         if network.portScanPreset != .off {
-                            Text("Scans ports \(network.portScanPreset.ports.map(String.init).joined(separator: ", ")) when you tap Scan Again.")
+                            Text("Scans ports \(network.portScanPreset.ports.map(String.init).joined(separator: ", ")) on every address in the confirmed range when you tap Scan Again.")
                                 .font(.caption).foregroundStyle(.secondary)
                         }
                     }
@@ -74,7 +74,7 @@ struct SettingsView: View {
                     Button("Reset Device Names", role: .destructive) { confirmingReset = true }
                         .disabled(devices.records.isEmpty)
                 } header: { Text("Local Network") } footer: {
-                    Text("Off by default. When on, LAN Browser scans once for web apps advertised with Bonjour, then only when you ask, and checks whether your bookmarks are reachable while the bookmark list is open. A port scan also finds web apps that don’t advertise themselves; it is off until you review and confirm the ports and addresses, and runs only when you scan. You’re asked to allow Local Network access. Nothing is sent to the developer or anyone else.")
+                    Text("Off by default. When on, LAN Browser scans once for web apps advertised with Bonjour, then only when you ask, and checks whether your bookmarks are reachable while the bookmark list is open. A port scan also finds web apps that don’t advertise themselves; it is off until you review and confirm the ports and addresses, and checks every selected port on every address in that range only when you scan. Scans also fetch site icons. You’re asked to allow Local Network access. Saved bookmarks are kept when results are refreshed or cleared. Nothing is sent to the developer.")
                 }
 
                 Section {
@@ -124,7 +124,7 @@ struct SettingsView: View {
 struct TrustedNetworkNotice: View {
     static let acceptedKey = "trustedNetworkNoticeAccepted"
     static let summary = "LAN Browser is intended exclusively for use on trusted home networks. It isn’t meant for browsing websites that are expected to be secure, such as banking, email or shopping."
-    static let details = "To reach home devices it loads plain HTTP pages, and it opens devices on your network even when their certificates aren’t trusted. When you’re on a network you don’t trust, use Safari. Login forms can offer to save passwords in this device’s Keychain, including on HTTP pages; AutoFill can fill saved passwords on matching login pages. Saving a password does not encrypt HTTP traffic."
+    static let details = "To reach home devices it loads plain HTTP pages, and it opens devices on your network even when their certificates aren’t trusted. When you’re on a network you don’t trust, use Safari. Login forms can offer to save passwords in this device’s Keychain, including on HTTP pages; AutoFill can fill saved passwords on matching login pages. Saving a password does not encrypt HTTP traffic. Saving a bookmark may contact its site for an icon and ask for Local Network permission, even with Local Network Features off. An optional port scan checks every selected web port on every address in the confirmed local range, only when you start a scan."
 
     let accept: () -> Void
 
@@ -156,6 +156,7 @@ private struct HelpView: View {
             Text("On public Wi-Fi, open the HTTP Forever bookmark to request the network’s sign-in page. A portal appears only when that network requires sign-in.")
             Text("For home services, use the same Wi-Fi network as your server and enter its hostname or IP address and port. Devices on your network with self-signed or otherwise untrusted certificates open anyway, marked with a red “!” you can tap to see the certificate; internet sites with invalid certificates are still blocked.")
             Text("Bookmarks open in a new tab unless the current tab is blank; change this in Settings. Touch and hold a bookmark to open it the other way. Tap the tabs button to switch tabs, or touch and hold it for New Tab and Close Tab. Touch and hold the bookmarks button to bookmark the current page.")
+            Text("Equivalent bookmark URLs can be saved only once. Adding an existing address opens its bookmark for editing. Scanning again or clearing discovery results keeps all saved bookmarks. Site icons are fetched directly from the same site when saving or scanning, without a third-party icon service. Cached icons display without new requests; if an icon is unavailable, the network symbol is shown.")
             Text("Offer to Save Passwords is on by default in Settings. Supported login forms offer Save or Not Now each time you submit, even for a password saved before. Saved Passwords lets you reveal, copy or delete saved credentials. Passwords stay in this device’s Keychain and aren’t synced to iCloud. AutoFill Saved Passwords is on by default and fills matching main-page login forms without submitting them; turn it off separately in Settings. Turning offers off keeps saved passwords; clearing website data keeps them too. Embedded sign-in frames, HTTP authentication dialogs and some custom forms aren’t supported.")
             Text("If a page won’t load, use Diagnose on the error screen, Why Can’t I Connect? in Page Info, or touch and hold a bookmark and choose Check Connection. Choose Rename Device… there, or use the Device section in Page Info, to give a device a friendly name.")
         }

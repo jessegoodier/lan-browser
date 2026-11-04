@@ -177,8 +177,10 @@ struct BrowserScreen: View {
         }) { presented in
             switch presented {
             case .bookmark(let draft):
-                BookmarkEditor(bookmark: draft.bookmark, isNew: draft.isNew) { bookmark in
-                    if store.save(bookmark) { return nil }
+                BookmarkEditor(bookmark: draft.bookmark, isNew: draft.isNew, existing: { url, id in
+                    store.existing(for: url, excluding: id)
+                }) { bookmark in
+                    if saveBookmark(bookmark) { return nil }
                     let error = store.errorMessage ?? "Please try again."
                     store.errorMessage = nil
                     return error
@@ -264,9 +266,7 @@ struct BrowserScreen: View {
                             openBookmark(bookmark.url)
                         } label: {
                             HStack(spacing: 14) {
-                                Image(systemName: "network")
-                                    .font(.title3)
-                                    .foregroundStyle(.tint)
+                                SiteIcon(data: bookmark.faviconPNG)
                                     .frame(width: 30)
                                     .overlay(alignment: .bottomTrailing) {
                                         if network.isEnabled { StatusDot(state: network.status[bookmark.id]) }
@@ -316,7 +316,13 @@ struct BrowserScreen: View {
                         label: { devices.label(for: $0.url, address: $0.address) },
                         open: { openBookmark($0.url.absoluteString) },
                         alternateOpen: (alternateOpenTitle, { openAlternate($0.url.absoluteString) }),
-                        save: { store.save(Bookmark(title: $0.name, url: $0.url.absoluteString)) },
+                        save: { service in
+                            if let existing = store.existing(for: service.url.absoluteString) {
+                                sheet = .bookmark(BookmarkDraft(bookmark: existing, isNew: false))
+                            } else {
+                                _ = saveBookmark(Bookmark(title: service.name, url: service.url.absoluteString, faviconPNG: service.faviconPNG))
+                            }
+                        },
                         rename: { if let host = $0.url.host { rename(host) } }
                     )
                 }
@@ -455,7 +461,7 @@ struct BrowserScreen: View {
             Button("Add Bookmark", systemImage: "bookmark") { newBookmark() }
                 .disabled(tab.address.isEmpty)
         } label: {
-            Label(returnsToPage ? "Return to Page" : "Bookmarks", systemImage: returnsToPage ? "globe" : "book")
+            Label(returnsToPage ? "Return to Page" : "Bookmarks", systemImage: returnsToPage ? "arrow.uturn.backward" : "book")
         } primaryAction: {
             editingAddress = false
             addressFocused = false
@@ -562,10 +568,26 @@ struct BrowserScreen: View {
         sheet = .download(export)
     }
 
+    private func saveBookmark(_ bookmark: Bookmark) -> Bool {
+        guard store.save(bookmark) else { return false }
+        guard let saved = store.bookmarks.first(where: { $0.id == bookmark.id }), saved.faviconPNG == nil,
+              let url = BrowserAddress.parse(saved.url) else { return true }
+        Task {
+            if let png = await FaviconLoader.shared.load(url) {
+                store.updateFavicon(png, id: saved.id, url: saved.url)
+            }
+        }
+        return true
+    }
+
     private func newBookmark() {
         editingAddress = false
         let onPage = !tab.showingStartPage
-        sheet = .bookmark(BookmarkDraft(bookmark: Bookmark(title: onPage ? tab.title : "", url: onPage ? tab.address : ""), isNew: true))
+        if onPage, let existing = store.existing(for: tab.address) {
+            sheet = .bookmark(BookmarkDraft(bookmark: existing, isNew: false))
+        } else {
+            sheet = .bookmark(BookmarkDraft(bookmark: Bookmark(title: onPage ? tab.title : "", url: onPage ? tab.address : ""), isNew: true))
+        }
     }
 }
 
@@ -659,7 +681,9 @@ private struct PageInfoSheet: View {
     private var deviceDetail: String {
         let record = devices.records[DeviceStore.key(info.host)]
         let other = DeviceStore.isIPAddress(info.host) ? record?.hostname : record?.address
-        return [info.host, other].compactMap { $0 }.joined(separator: " · ")
+        return [info.host, other].compactMap { $0 }
+            .map { DeviceStore.endpointLabel(host: $0, port: info.port ?? (info.isEncrypted ? 443 : 80)) }
+            .joined(separator: " · ")
     }
 
     private var connection: (text: String, symbol: String, color: Color) {
@@ -715,7 +739,7 @@ private struct PageInfoSheet: View {
                 }
                 Section("Page") {
                     if !info.title.isEmpty { LabeledContent("Title", value: info.title) }
-                    LabeledContent("Host", value: info.host)
+                    LabeledContent("Host", value: DeviceStore.endpointLabel(host: info.host, port: info.port ?? (info.isEncrypted ? 443 : 80)))
                     LabeledContent("Port", value: info.port.map(String.init) ?? "Default (\(info.isEncrypted ? 443 : 80))")
                     LabeledContent("Protocol", value: info.scheme)
                 }
@@ -762,9 +786,11 @@ private struct BrowserWebView: UIViewRepresentable {
 private struct BookmarkEditor: View {
     @Environment(\.dismiss) private var dismiss
     @ViewState var bookmark: Bookmark
-    let isNew: Bool
+    @ViewState var isNew: Bool
+    let existing: (String, UUID) -> Bookmark?
     let save: (Bookmark) -> String?
     @ViewState private var saveError: String?
+    @ViewState private var showingExisting = false
 
     private var parsedURL: URL? { BrowserAddress.parse(bookmark.url) }
     private var valid: Bool { parsedURL != nil && !bookmark.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
@@ -781,7 +807,8 @@ private struct BookmarkEditor: View {
                         .keyboardType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled()
                         .accessibilityLabel("Bookmark address")
                 } header: { Text("Address") } footer: {
-                    Text("Addresses without http:// or https:// use HTTP.")
+                    Text("Addresses without http:// or https:// use HTTP. Saving may contact this site for its icon, even with Local Network Features off.")
+                    if showingExisting { Text("This address is already bookmarked. You’re editing the existing bookmark.") }
                 }
             }
             .navigationTitle(isNew ? "Add Bookmark" : "Edit Bookmark")
@@ -796,6 +823,12 @@ private struct BookmarkEditor: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
                         guard let parsedURL else { return }
+                        if isNew, let saved = existing(parsedURL.absoluteString, bookmark.id) {
+                            bookmark = saved
+                            isNew = false
+                            showingExisting = true
+                            return
+                        }
                         bookmark.url = parsedURL.absoluteString
                         bookmark.title = bookmark.title.trimmingCharacters(in: .whitespacesAndNewlines)
                         if let error = save(bookmark) { saveError = error }

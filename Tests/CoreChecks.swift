@@ -82,6 +82,113 @@ struct CoreChecks {
         check(!failed.save(custom), "Failed writes return failure")
         check(!failed.bookmarks.contains(custom), "Failed writes do not claim persistence")
 
+        let canonical = BrowserAddress.bookmarkKey("HTTP://NAS.local:80")
+        check(canonical == BrowserAddress.bookmarkKey("http://nas.local/"), "Equivalent bookmark origins")
+        check(BrowserAddress.bookmarkKey("HTTPS://NAS.local:443") == BrowserAddress.bookmarkKey("https://nas.local/"), "HTTPS default port")
+        for distinct in ["https://nas.local/", "http://nas.local:8080/", "http://nas.local/app", "http://nas.local/?a=1", "http://nas.local/#section"] {
+            check(BrowserAddress.bookmarkKey(distinct) != canonical, "Keep distinct bookmark: \(distinct)")
+        }
+        check(BrowserAddress.bookmarkKey("http://nas.local/App") != BrowserAddress.bookmarkKey("http://nas.local/app"), "Paths remain case sensitive")
+        check(BrowserAddress.bookmarkKey("http://nas.local/?b=2&a=1") != BrowserAddress.bookmarkKey("http://nas.local/?a=1&b=2"), "Query order is preserved")
+        let uniqueFile = directory.appending(path: "unique/bookmarks.json")
+        let uniqueStore = BookmarkStore(fileURL: uniqueFile)
+        let firstBookmark = Bookmark(title: "First", url: "HTTP://NAS.local:80")
+        check(uniqueStore.save(firstBookmark), "Save original URL spelling")
+        let duplicate = Bookmark(title: "Second", url: "http://nas.local/")
+        check(!uniqueStore.save(duplicate), "Reject duplicate add")
+        check(uniqueStore.existing(for: duplicate.url) == firstBookmark, "Find existing bookmark for Add UI")
+        var colliding = uniqueStore.bookmarks[0]
+        colliding.url = duplicate.url
+        check(!uniqueStore.save(colliding), "Reject colliding edit")
+        check(BookmarkStore(fileURL: uniqueFile).bookmarks == uniqueStore.bookmarks, "Rejected writes leave disk unchanged")
+        var withIcon = firstBookmark
+        withIcon.faviconPNG = Data([1, 2, 3])
+        check(uniqueStore.save(withIcon), "Edit own URL and icon")
+        uniqueStore.updateFavicon(Data([9]), id: withIcon.id, url: "http://old.local/")
+        check(uniqueStore.existing(for: withIcon.url)?.faviconPNG == Data([1, 2, 3]), "Stale icon URL ignored")
+        var movedBookmark = withIcon
+        movedBookmark.url = "http://elsewhere.local/"
+        check(uniqueStore.save(movedBookmark), "Change bookmark address")
+        check(uniqueStore.existing(for: movedBookmark.url)?.faviconPNG == nil, "Changing URL clears old icon")
+        uniqueStore.delete(at: IndexSet(integer: 1))
+        uniqueStore.updateFavicon(Data([9]), id: movedBookmark.id, url: movedBookmark.url)
+        check(uniqueStore.bookmarks.count == 1, "Late icon cannot resurrect deleted bookmark")
+        check(!corrupt.save(custom), "Corrupt bookmark files cannot be overwritten by a later save")
+        let preservedAgain = try String(contentsOf: file, encoding: .utf8)
+        check(preservedAgain == preserved, "Corrupt file preserved after save attempt")
+
+        let migrationDirectory = directory.appending(path: "migration")
+        try FileManager.default.createDirectory(at: migrationDirectory, withIntermediateDirectories: true)
+        let migrationFile = migrationDirectory.appending(path: "bookmarks.json")
+        let oldBookmarks = [firstBookmark, duplicate, custom]
+        let oldData = try JSONEncoder().encode(oldBookmarks)
+        try oldData.write(to: migrationFile)
+        let migrated = BookmarkStore(fileURL: migrationFile)
+        check(migrated.bookmarks == [firstBookmark, custom], "Migration keeps first identity, title and order")
+        let backups = try FileManager.default.contentsOfDirectory(at: migrationDirectory, includingPropertiesForKeys: nil).filter { $0.lastPathComponent.hasPrefix("bookmarks-before-deduplication-") }
+        check(backups.count == 1, "Migration creates one backup")
+        let backupData = try Data(contentsOf: backups[0])
+        check(backupData == oldData, "Migration backup preserves exact original bytes")
+        check(BookmarkStore(fileURL: migrationFile).bookmarks == migrated.bookmarks, "Migration survives relaunch")
+        let migrationFiles = try FileManager.default.contentsOfDirectory(atPath: migrationDirectory.path)
+        check(migrationFiles.count == 2, "Migration does not repeat")
+        let lockedDirectory = directory.appending(path: "locked-migration")
+        try FileManager.default.createDirectory(at: lockedDirectory, withIntermediateDirectories: true)
+        let lockedFile = lockedDirectory.appending(path: "bookmarks.json")
+        try oldData.write(to: lockedFile)
+        try FileManager.default.setAttributes([.posixPermissions: 0o500], ofItemAtPath: lockedDirectory.path)
+        let lockedStore = BookmarkStore(fileURL: lockedFile)
+        let lockedBytes = try Data(contentsOf: lockedFile)
+        try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: lockedDirectory.path)
+        check(lockedStore.errorMessage != nil && lockedStore.bookmarks == oldBookmarks, "Failed migration backup preserves the original list")
+        check(lockedBytes == oldData && !lockedStore.save(custom), "Backup failure prevents later writes in this session")
+        let legacy = Data("[{\"id\":\"\(custom.id.uuidString)\",\"title\":\"Router\",\"url\":\"http://192.168.1.1/\"}]".utf8)
+        let decodedLegacy = try JSONDecoder().decode([Bookmark].self, from: legacy)
+        check(decodedLegacy.first?.faviconPNG == nil, "Legacy bookmarks decode without an icon")
+        let cachedService = DiscoveredService(name: "Fixture", type: "_http._tcp", url: URL(string: "http://fixture.local/")!, faviconPNG: Data([1, 2, 3]))
+        let iconCache = DiscoveryCache(fileURL: directory.appending(path: "discovered.json"))
+        iconCache.save(DiscoveryScan(date: Date(), services: [cachedService]))
+        check(iconCache.load()?.services.first?.faviconPNG == cachedService.faviconPNG, "Discovery icon persists")
+        iconCache.save(DiscoveryScan(date: Date(), services: []))
+        iconCache.clear()
+        check(BookmarkStore(fileURL: migrationFile).bookmarks == migrated.bookmarks, "Replacing and clearing discovery never changes bookmarks")
+
+        let page = URL(string: "http://fixture.local/apps/index.html")!
+        let iconHTML = """
+        <!-- <link rel="icon" href="/comment.png"> -->
+        <script>const text = '<link rel="icon" href="/script.png">';</script>
+        <SCRIPT>const other = '<link rel="icon" href="/script2.png">';</script
+         bar>
+        <!-- <link rel="icon" href="/bang.png"> --!>
+        <LINK HREF='../images/icon.png?a=1&amp;b=2' REL='shortcut ICON'>
+        <link href="http://external.local/icon.png" rel=icon>
+        <link href="//fixture.local:80/second.ico" rel=icon>
+        <link href="/apple.png" rel=apple-touch-icon>
+        """
+        let candidates = FaviconPolicy.candidates(in: iconHTML, page: page).map(\.absoluteString)
+        check(candidates == ["http://fixture.local/images/icon.png?a=1&b=2", "http://fixture.local:80/second.ico", "http://fixture.local/favicon.ico"], "Resolve icon links, entities, default port, and fallback")
+        check(FaviconPolicy.resolve("https://fixture.local/icon.png", relativeTo: page) == nil, "Icons cannot change scheme")
+        check(FaviconPolicy.resolve("http://fixture.local:8080/icon.png", relativeTo: page) == nil, "Icons cannot change port")
+        check(FaviconPolicy.resolve("data:image/png;base64,AA==", relativeTo: page) == nil, "Ignore non-HTTP icons")
+        func parsed(_ text: String, eof: Bool = false, limit: Int = 100) -> FaviconHTTP.Result {
+            FaviconHTTP.parse(Data(text.utf8), limit: limit, eof: eof)
+        }
+        if case .complete(let reply) = parsed("HTTP/1.1 200 OK\r\nContent-Length: 3\r\n\r\nabc") {
+            check(reply.body == Data("abc".utf8), "Read a framed icon body")
+        } else { check(false, "Expected complete response") }
+        if case .incomplete = parsed("HTTP/1.1 200 OK\r\nContent-Length: 3\r\n\r\na") { check(true, "Wait for fragmented body") }
+        else { check(false, "Premature response completion") }
+        if case .complete(let reply) = parsed("HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\n2\r\nab\r\n1\r\nc\r\n0\r\n\r\n") {
+            check(reply.body == Data("abc".utf8), "Decode chunked icon body")
+        } else { check(false, "Chunked response failed") }
+        for invalid in ["HTTP/1.1 200 OK\r\nContent-Length: 101\r\n\r\n", "HTTP/1.1 200 OK\r\nContent-Length: 3\r\n\r\na", "HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n\r\nzz\r\n", "HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\n\r\n"] {
+            if case .rejected = parsed(invalid, eof: true) { check(true, "Reject oversized or malformed response") }
+            else { check(false, "Invalid HTTP accepted") }
+        }
+        if case .complete(let reply) = parsed("HTTP/1.0 200 OK\r\n\r\nabc", eof: true) {
+            check(reply.body == Data("abc".utf8), "Connection-close response")
+        } else { check(false, "Missing EOF framing") }
+
         if CommandLine.arguments.count > 1 {
             let plistTypes = try JSONDecoder().decode([String].self, from: Data(CommandLine.arguments[1].utf8))
             check(plistTypes == ServiceCatalog.types, "NSBonjourServices matches ServiceCatalog.types")
@@ -161,20 +268,25 @@ struct CoreChecks {
         let studio = URL(string: "http://studio.local:8888/")!
         check(devices.label(for: studio) == "studio:8888", "Label without a known IP")
         devices.record(address: "10.0.2.2", for: "studio.local")
-        check(devices.label(for: studio) == "studio:8888 · 10.0.2.2", "Label shows name, port, and IP")
-        check(devices.label(for: URL(string: "http://studio.local:32400/web")!) == "studio:32400/web · 10.0.2.2", "Label keeps the path")
+        check(devices.label(for: studio) == "studio:8888 · 10.0.2.2:8888", "Label shows name, port, and IP")
+        check(devices.label(for: URL(string: "http://studio.local:32400/web")!) == "studio:32400/web · 10.0.2.2:32400", "Label keeps the path")
         check(devices.rename("STUDIO.local", to: "  Desk PC "), "Rename device")
-        check(devices.label(for: studio) == "Desk PC:8888 · 10.0.2.2", "Custom name is shared across host spellings")
+        check(devices.label(for: studio) == "Desk PC:8888 · 10.0.2.2:8888", "Custom name is shared across host spellings")
         devices.record(address: "10.0.2.9", for: "studio.local")
         let reloaded = DeviceStore(fileURL: devicesFile)
-        check(reloaded.label(for: studio) == "Desk PC:8888 · 10.0.2.9", "Name survives an IP change and relaunch")
+        check(reloaded.label(for: studio) == "Desk PC:8888 · 10.0.2.9:8888", "Name survives an IP change and relaunch")
         check(reloaded.rename("studio.local", to: "") && reloaded.customName(for: "studio.local") == nil, "Empty name restores the default")
         check(reloaded.rename("studio.local", to: "studio") && reloaded.customName(for: "studio.local") == nil, "Default name is not stored as custom")
         reloaded.record(address: "10.0.0.232", for: "10.0.0.232")
-        check(reloaded.label(for: URL(string: "http://10.0.0.232/")!) == "10.0.0.232", "IP bookmarks don’t repeat the IP")
+        check(reloaded.label(for: URL(string: "http://10.0.0.232/")!) == "10.0.0.232:80", "IP bookmarks don’t repeat the IP")
         reloaded.record(hostname: "brothera1b2c3d4.localdomain", for: "10.0.0.232")
-        check(reloaded.label(for: URL(string: "http://10.0.0.232/")!) == "brothera1b2c3d4", "IP bookmark shows reverse-lookup name")
-        check(reloaded.label(for: URL(string: "http://nas.local/")!, address: "10.0.0.5") == "nas · 10.0.0.5", "Discovery address is used when none is stored")
+        check(reloaded.label(for: URL(string: "http://10.0.0.232/")!) == "brothera1b2c3d4:80", "IP bookmark shows reverse-lookup name")
+        check(reloaded.label(for: URL(string: "http://nas.local/")!, address: "10.0.0.5") == "nas:80 · 10.0.0.5:80", "Discovery address is used when none is stored")
+
+        check(reloaded.label(for: URL(string: "http://nas.local:80/")!) == "nas:80", "Explicit default HTTP port stays visible")
+        check(reloaded.label(for: URL(string: "https://nas.local/")!) == "nas:443", "Implicit HTTPS port stays visible")
+        check(reloaded.label(for: URL(string: "http://[fd00::1]/")!) == "[fd00::1]:80", "IPv6 labels bracket the address")
+        check(reloaded.label(for: URL(string: "http://nas.local:8888/")!, address: "fd00::2") == "nas:8888 · [fd00::2]:8888", "IPv6 fallback includes the port")
 
         check(!TabPolicy.opensNewTab(currentTabIsBlank: true, preference: .newTab), "A blank tab is filled, not left behind")
         check(TabPolicy.opensNewTab(currentTabIsBlank: false, preference: .newTab), "New Tab preference opens a tab")
@@ -216,7 +328,15 @@ struct CoreChecks {
         check(IPv4Range.scanRange(network: "172.16.0.0/16", deviceIP: "172.16.9.40")?.cidr == "172.16.9.0/24", "Large networks fall back to the phone’s /24")
         check(IPv4Range(cidr: "10.0.0.1/32")?.hosts().isEmpty == true && IPv4Range(cidr: "nonsense") == nil && IPv4Range(cidr: "10.0.0.256/24") == nil, "Reject unusable ranges")
         let plan = PortScanPlan(preset: .common, range: lan, deviceIP: "10.0.2.183")
-        check(plan.addressCount == 1021 && plan.discoveryConnections == 2042, "Plan counts addresses and pass-1 connections")
+        check(plan.addressCount == 1021 && plan.connectionCount == 22462, "Plan counts every selected port on every address")
+        let targets = plan.targets
+        check(targets.count == plan.connectionCount && Set(targets.map { ServiceCatalog.endpointKey(host: $0.host, port: $0.port) }).count == targets.count, "Every scan endpoint is checked exactly once")
+        check(lanHosts.allSatisfy { host in Set(targets.filter { $0.host == host }.map(\.port)) == Set(PortScanPreset.common.ports) }, "Every host receives every preset port without a liveness prerequisite")
+        check(targets.contains { $0.host == "10.0.3.46" && $0.port == 8888 }, "A service on 8888 is checked without responses from 80 or 443")
+        check(targets.allSatisfy { $0.host != plan.deviceIP && lanHosts.contains($0.host) }, "Targets stay in the confirmed range and skip this device")
+        let standardPlan = PortScanPlan(preset: .standard, range: lan, deviceIP: plan.deviceIP)
+        check(standardPlan.connectionCount == 2042 && standardPlan.targets.allSatisfy { [80, 443].contains($0.port) }, "Standard scans only its selected ports on every host")
+        check(PortScanPlan(preset: .off, range: lan, deviceIP: plan.deviceIP).targets.isEmpty, "Off has no scan targets")
         check(plan.needsConfirmation(confirmedCount: nil) && !plan.needsConfirmation(confirmedCount: 1021) && !plan.needsConfirmation(confirmedCount: 4000) && plan.needsConfirmation(confirmedCount: 253), "Confirm again only for a larger network")
         check(PortScan.prefersHTTPS(port: 9443) && !PortScan.prefersHTTPS(port: 9000), "HTTPS-first ports")
         check(DiagnosticsText.htmlTitle(in: "HTTP/1.1 200 OK\r\n\r\n<html><head><TITLE lang=en>\n  Portainer &amp; Co\n</TITLE>") == "Portainer & Co", "Page title, any case, entities decoded")
@@ -238,7 +358,7 @@ struct CoreChecks {
         check(collapsed == [unifi, loginRedirect, lighttpdHTTPS], "Drop 400s, redirects to found pages, and HTTP copies of HTTPS pages")
         check(PortScan.collapse([unifiRedirect]) == [unifiRedirect], "A redirect to a page that wasn’t found is kept")
         check(PortScan.name(for: unifi, deviceName: "unifi") == "UniFi OS", "Page title names the row")
-        check(PortScan.name(for: loginRedirect, deviceName: "camera") == "camera", "Redirects use the device name, not the placeholder title")
+        check(PortScan.name(for: loginRedirect, deviceName: "camera") == "camera:80", "Redirects use the device name, not the placeholder title")
         check(PortScan.name(for: finding("http://10.0.3.46:3000/", 200), deviceName: "studio") == "studio:3000", "Device name keeps a non-web port")
         check(PortScan.name(for: lighttpdHTTPS, deviceName: nil) == "lighttpd/1.4.54", "Server software when nothing better")
         check(PortScan.name(for: finding("http://10.0.3.166/", 200), deviceName: nil) == "Web app on port 80", "Port as the last resort")
