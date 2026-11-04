@@ -440,7 +440,7 @@ struct BrowserScreen: View {
 
     private var forwardButton: some View {
         Button("Forward", systemImage: "chevron.right") { tab.forward() }
-        .disabled(!tab.canGoForward || tab.showingStartPage)
+            .disabled(!tab.canGoForward || tab.showingStartPage)
     }
 
     private var reloadButton: some View {

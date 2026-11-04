@@ -14,7 +14,7 @@ LAN Browser is intended exclusively for use on trusted home networks. It isn’t
 
 - Bookmarks start page on fresh launch and in new tabs, seeded with **HTTP Forever Captive Portal — http://httpforever.com/**. Use it to reach a Wi-Fi sign-in page, then add your own LAN bookmarks.
 - Bottom address bar on iPhone and in narrow iPad windows, or a top bar at full width on iPad and Mac (see [iPad and Mac](#ipad-and-mac)). Omitted schemes default to HTTP. Explicit HTTPS and server redirects work normally.
-- Back, Forward, Reload/Stop, swipe navigation, loading state, and retryable errors.
+- Back, Forward, Reload/Stop, swipe navigation, loading state, and retryable errors. A page opened from the bookmark list shows **Done**, and Back returns to the list once the page has no earlier history; a tab opened just for that page closes.
 - Add, edit, delete, and reorder bookmarks, stored on the device. Equivalent URLs cannot be saved twice; adding an existing address opens its bookmark for editing. Network scans never remove saved bookmarks, including ones saved from discovery.
 - Persistent website cookies and storage. No browsing-history database, apart from the open tabs saved for Restore Tabs on Launch.
 - Downloads through WebKit followed by **Save to Files**, with a destination choice for each file. Files are temporarily staged in the app and cleaned up after export or cancellation.
