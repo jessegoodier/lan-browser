@@ -76,6 +76,10 @@ final class LocalNetwork: ObservableObject {
     private var scanPorts = PortScanPreset.off
     private var portScanTask: Task<Void, Never>?
     private var portScanRunning = false
+    private var iconGeneration = UUID()
+    private var iconTasks: [String: Task<Void, Never>] = [:]
+    private var iconAttempts: Set<String> = []
+    private var icons: [String: Data] = [:]
 
     init(devices: DeviceStore, defaults: UserDefaults = .standard, cache: DiscoveryCache = DiscoveryCache()) {
         self.devices = devices
@@ -106,7 +110,10 @@ final class LocalNetwork: ObservableObject {
 
     /// A scan interrupted by the app leaving the foreground is dropped; the previous one is kept.
     func setForeground(_ foreground: Bool) {
-        if !foreground && isSearching { cancelScan() }
+        if !foreground {
+            cancelIcons()
+            if isSearching { cancelScan() }
+        }
     }
 
     /// Checks bookmarks that are new or whose address changed since their last check.
@@ -178,6 +185,7 @@ final class LocalNetwork: ObservableObject {
     }
 
     func clearResults() {
+        cancelIcons()
         if isSearching { stopBrowsers() }
         stopPortScan()
         isSearching = false
@@ -192,6 +200,7 @@ final class LocalNetwork: ObservableObject {
     }
 
     func remove(_ service: DiscoveredService) {
+        iconTasks.removeValue(forKey: service.id)?.cancel()
         services.removeAll { $0.id == service.id }
         serviceStatus[service.id] = nil
         guard !isSearching, let lastScan else { return }
@@ -205,6 +214,7 @@ final class LocalNetwork: ObservableObject {
             if lastScan == nil { autoScan() }
             if visible { Task { await checkAll() } }
         } else {
+            cancelIcons()
             if isSearching { cancelScan() }
             pathMonitor?.cancel()
             pathMonitor = nil
@@ -257,6 +267,8 @@ final class LocalNetwork: ObservableObject {
     // MARK: Discovery
 
     private func startBrowsing() {
+        cancelIcons()
+        icons = Dictionary(services.compactMap { service in service.faviconPNG.map { (service.id, $0) } }, uniquingKeysWith: { first, _ in first })
         stopBrowsers()
         resolved.removeAll()
         resolving.removeAll()
@@ -297,6 +309,7 @@ final class LocalNetwork: ObservableObject {
 
     /// The user cancelled: drop this scan and keep showing the previous one.
     func stopScanning() {
+        cancelIcons()
         if isSearching { cancelScan() }
     }
 
@@ -308,6 +321,7 @@ final class LocalNetwork: ObservableObject {
     }
 
     private func cancelScan() {
+        cancelIcons()
         stopBrowsers()
         stopPortScan()
         isSearching = false
@@ -365,7 +379,39 @@ final class LocalNetwork: ObservableObject {
         let byKey = Dictionary(uniqueKeysWithValues: merged.map { (ServiceCatalog.deviceKey($0.url), $0) })
         order.removeAll { byKey[$0] == nil }
         order += merged.map { ServiceCatalog.deviceKey($0.url) }.filter { !order.contains($0) }
-        services = order.compactMap { byKey[$0] }
+        services = order.compactMap { byKey[$0] }.map(withIcon)
+        loadIcons()
+    }
+
+    private func withIcon(_ service: DiscoveredService) -> DiscoveredService {
+        var service = service
+        service.faviconPNG = icons[service.id] ?? service.faviconPNG
+        return service
+    }
+
+    private func cancelIcons() {
+        iconGeneration = UUID()
+        iconTasks.values.forEach { $0.cancel() }
+        iconTasks.removeAll()
+        iconAttempts.removeAll()
+    }
+
+    private func loadIcons() {
+        guard isEnabled, isSearching else { return }
+        let generation = iconGeneration
+        for service in services where service.faviconPNG == nil && iconAttempts.insert(service.id).inserted {
+            iconTasks[service.id] = Task { [weak self] in
+                let png = await FaviconLoader.shared.load(service.url)
+                guard !Task.isCancelled, let self, isEnabled, iconGeneration == generation else { return }
+                iconTasks[service.id] = nil
+                guard let png, let index = services.firstIndex(where: { $0.id == service.id }) else { return }
+                icons[service.id] = png
+                services[index].faviconPNG = png
+                if !isSearching, let lastScan {
+                    cache.save(DiscoveryScan(date: lastScan, network: scannedNetwork, services: services, ports: lastScanPorts))
+                }
+            }
+        }
     }
 
     /// Ends the scan once results stop arriving, then saves it as the new last scan.
@@ -381,7 +427,7 @@ final class LocalNetwork: ObservableObject {
             }
             stopBrowsers()
             isSearching = false
-            services = ServiceCatalog.mergedWithScan(bonjour: Array(resolved.values), scanned: scanned)
+            services = ServiceCatalog.mergedWithScan(bonjour: Array(resolved.values), scanned: scanned).map(withIcon)
             let now = Date()
             lastScan = now
             scannedNetwork = currentNetwork
@@ -436,9 +482,8 @@ final class LocalNetwork: ObservableObject {
 
     // MARK: Port scan
 
-    /// Pass 1 finds devices that are on (a closed port still answers with a refusal); pass 2 tries
-    /// the chosen ports on those devices and on Bonjour finds; open ports that answer as web pages
-    /// become rows titled from the page.
+    /// Checks every selected port on every address in the confirmed range. A host may
+    /// silently drop standard web ports while serving a page on another selected port.
     private func runPortScan(_ plan: PortScanPlan) async {
         defer {
             if !Task.isCancelled {
@@ -447,26 +492,8 @@ final class LocalNetwork: ObservableObject {
                 scheduleSettle()
             }
         }
-        let hosts = plan.range.hosts(excluding: plan.deviceIP)
-        let ports = plan.preset.ports
-        var alive = Set<String>()
         var open: [(String, Int)] = []
-
-        let pass1 = hosts.flatMap { host in PortScan.livenessPorts.map { (host, $0) } }
-        await connectAll(pass1, phase: "Checking addresses", timeout: 0.75) { host, port, outcome in
-            guard outcome == .connected || outcome == .failed(.refused) else { return }
-            alive.insert(host)
-            if outcome == .connected && ports.contains(port) { open.append((host, port)) }
-        }
-        guard !Task.isCancelled else { return }
-
-        let inRange = Set(hosts)
-        let bonjourHosts = resolved.values.compactMap { $0.address ?? $0.url.host }.filter(DeviceStore.isIPAddress)
-        let candidates = alive.union(bonjourHosts).sorted()
-        let pass2 = candidates.flatMap { host in
-            ports.filter { !(inRange.contains(host) && PortScan.livenessPorts.contains($0)) }.map { (host, $0) }
-        }
-        await connectAll(pass2, phase: "Checking ports", timeout: 1.5) { host, port, outcome in
+        await connectAll(plan.targets, phase: "Checking ports", timeout: 1.5) { host, port, outcome in
             if outcome == .connected { open.append((host, port)) }
         }
         guard !Task.isCancelled else { return }

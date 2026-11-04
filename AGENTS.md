@@ -8,6 +8,8 @@ LAN Browser is a small tabbed iPhone and iPad browser (SwiftUI + WebKit) for hom
 
 This file doubles as the contributor guide: it describes the layout, commands and conventions that both people and coding agents should follow.
 
+Before finishing all tasks, check this guide against the completed work and update any affected file descriptions, commands, conventions, or behavior rules.
+
 ## Files
 
 All app code is in `LANBrowser/`:
@@ -18,26 +20,30 @@ All app code is in `LANBrowser/`:
 | `BrowserScreen.swift` | Main screen, toolbars (bottom on iPhone, top with an inline address field on iPad at regular width), bookmark list, sheets (Page Info, bookmark editor, rename alert). Also `BrowserLayout`, and `BrowserCommand`/`BrowserActions`, the focused scene value the menu commands act through |
 | `BrowserModel.swift` | `BrowserSession`: tabs, selection, downloads and export queue, tab saving, clear website data. Also `PageInfo` and debug-only `PageDiagnostics` |
 | `BrowserTab.swift` | One tab: lazy `WKWebView`, navigation state, page errors, new-window links (open a new tab), JS dialogs |
+| `FormInputBehavior.swift` | Disables automatic capitalization in page forms, including dynamically inserted fields |
 | `PasswordPolicy.swift` / `PasswordStore.swift` / `PasswordCapture.swift` / `PasswordAutofill.swift` / `SavedPasswordsView.swift` | Password origin rules, device-only Keychain storage, isolated login-form capture and AutoFill, and Settings management |
 | `TabStore.swift` | `SavedTab`/`SavedTabs` in tabs.json, `TabPolicy`, `OpenBookmarksIn` |
 | `TabViews.swift` | Tab switcher grid |
-| `Bookmarks.swift` | `Bookmark` model and `BookmarkStore` (JSON in Application Support) |
-| `DeviceNames.swift` | `DeviceRecord`/`DeviceStore`: friendly names, last-seen IPs and reverse-lookup names per host (devices.json); `label(for:)` builds `name:port · IP` |
-| `Address.swift` | `BrowserAddress.parse`: user input to http/https URL |
+| `Bookmarks.swift` | `Bookmark` model and `BookmarkStore` (JSON in Application Support), cached icon PNGs, duplicate prevention and backed-up deduplication on load |
+| `FaviconPolicy.swift` / `FaviconLoader.swift` | Foundation-only same-origin icon discovery and bounded HTTP framing; native icon fetching, shared requests, cancellation and 64-pixel PNG thumbnails |
+| `DeviceNames.swift` | `DeviceRecord`/`DeviceStore`: friendly names, last-seen IPs and reverse-lookup names per host (devices.json); `label(for:)` builds `name:port/path · IP:port`, including default ports; `endpointLabel` brackets IPv6 |
+| `Address.swift` | `BrowserAddress.parse`: user input to http/https URL; `bookmarkKey` normalizes equivalent bookmark addresses |
 | `ServiceCatalog.swift` | Bonjour types, service-to-URL mapping, duplicate merging, `isLocalHost` |
 | `DiagnosticsLogic.swift` | Diagnostic step types, advice text (naming the `HostDevice`: iPhone, iPad or Mac), HTTP status/header/`<title>` parsing, report text; `PageResponse` (a non-200 main-page response with its headers), `HTTPStatus` (standard reason phrases), `ErrorText` (exact error domain/code/URL), `Redirects` and `BlockedPorts` (the Fetch “bad ports” WebKit drops silently) |
 | `NetworkProbe.swift` | Native checks: TCP connect, raw HTTP GET (with TLS trust recording), DNS lookup, network snapshot, and `NetworkProbe.follow` for redirect chains (`Redirects.limit` = 5; used by diagnostics and the port scan’s page reading) |
 | `Certificates.swift` | `CertificateSummary`, `CertificateIssue`: chain details (subject, common name, validity, key, serial, SHA-256 fingerprints) and report text for untrusted local certificates |
-| `LocalNetwork.swift` | Opt-in Bonjour discovery (`NWBrowser`), run on demand after one automatic first scan, the two-pass port scan once confirmed, and bookmark reachability dots |
+| `LocalNetwork.swift` | Opt-in Bonjour discovery (`NWBrowser`), run on demand after one automatic first scan, every-preset-port checks on every address in a confirmed port scan, bookmark reachability dots, and cancellable scan icon enrichment |
 | `PortScan.swift` | Pure port-scan logic: `PortScanPreset`, `IPv4Range` (capped at 1,024 addresses), `PortScanPlan` (a confirmed scan), `WebFinding` (a page that answered), and `PortScan.collapse` and `PortScan.name` (result clean-up and row titles) |
 | `DiscoveryCache.swift` | `DiscoveryScan` in discovered.json: the last On This Network scan, kept until the next scan or clear |
 | `ConnectionDiagnostics.swift` | Runs the “Why can’t I connect?” steps |
-| `NetworkViews.swift` | Opt-in card, On This Network section, status dot, port-scan confirmation sheet, diagnostics views, the response strip and details (`ResponseBanner`, `ResponseDetailsView`), and the certificate strip and details (`CertificateStrip`, `CertificateDetailsView`) |
+| `NetworkViews.swift` | Opt-in card, On This Network section, cached `SiteIcon`, status dot, port-scan confirmation sheet, diagnostics views, the response strip and details (`ResponseBanner`, `ResponseDetailsView`), and the certificate strip and details (`CertificateStrip`, `CertificateDetailsView`) |
 | `SettingsView.swift` | Settings sheet, help page, privacy policy view, and `TrustedNetworkNotice` (the first-use notice, also shown at the top of the help page) |
 
 Other locations:
 - `Tests/CoreChecks.swift` is a standalone `@main` executable using `precondition`. There is no XCTest target.
-- `Tests/serve_fixture.py` is a manual test server on port 8889.
+- `Tests/FaviconChecks.swift` checks bookmark/discovery isolation and, with a running fixture, icon requests, limits, cancellation and late responses. Run it with `Scripts/check_favicons.sh`.
+- `Tests/PasswordSaveChecks.swift`, `Tests/password_capture_checks.js` and `Tests/password_autofill_checks.js` contain focused password checks.
+- `Tests/serve_fixture.py` is a manual test server on port 8889, including icon fixtures under `/icons/`.
 - `Scripts/make_icon.swift` renders the app icon (“LAN” in gold on dark gray) to `AppIcon.appiconset/AppIcon.png`. Edit and rerun it rather than editing the PNG by hand.
 - `docs/TESTING.md` lists manual on-device checks.
 - `LICENSE` is MIT.
@@ -49,6 +55,9 @@ Other locations:
 
 ```sh
 Scripts/check.sh   # compiles Foundation-only sources + CoreChecks for macOS, runs them, lints plists/pbxproj, runs policy_check.sh
+Scripts/check_favicons.sh   # compiles native favicon/network code and runs bookmark/discovery isolation checks
+# With Tests/serve_fixture.py running, also exercise icon requests:
+Scripts/check_favicons.sh http://127.0.0.1:8889/
 xcodebuild -project LANBrowser.xcodeproj -scheme LANBrowser \
   -destination 'generic/platform=iOS Simulator' -derivedDataPath build/dd CODE_SIGNING_ALLOWED=NO build
 ```
@@ -77,12 +86,14 @@ There is no XCUITest target and simulator taps can’t be scripted here, so test
 
 - **Xcode project:** `project.pbxproj` uses hand-numbered IDs, not synchronized folders. Every new file needs a PBXFileReference, a PBXBuildFile, a group child and a Sources (or Resources) entry. Continue the existing ID sequence.
 - **Layouts:** gate iPad and Mac UI on `BrowserLayout.usesTopBar(sizeClass)` (iPad idiom *and* regular width), never on size class alone, so every iPhone, including an unfolded iPhone Duo, keeps the bottom toolbar the system can move into the side strip. Name the running device with `HostDevice.current` (it checks `isiOSAppOnMac` first, because the Mac reports the iPad idiom); on a Mac, point to System Settings rather than `UIApplication.openSettingsURLString`. New browser actions that should have a shortcut go through `BrowserCommand`.
-- **Testable logic:** keep pure logic in Foundation-only files (no UIKit, WebKit or SwiftUI) and add them to `Scripts/check.sh` with checks in `CoreChecks.swift`. It currently compiles `Address`, `Bookmarks`, `ServiceCatalog`, `DiagnosticsLogic`, `DeviceNames`, `TabStore`, `DiscoveryCache` and `PortScan`.
+- **Testable logic:** keep pure logic in Foundation-only files (no UIKit, WebKit or SwiftUI) and add them to `Scripts/check.sh` with checks in `CoreChecks.swift`. It currently compiles `Address`, `Bookmarks`, `ServiceCatalog`, `DiagnosticsLogic`, `DeviceNames`, `TabStore`, `DiscoveryCache`, `PortScan`, `FaviconPolicy` and `PasswordPolicy`.
 - **Concurrency:** use Swift 5 mode with `SWIFT_STRICT_CONCURRENCY = complete`. Models are `@MainActor final class … : ObservableObject` with `@Published`; don’t switch to `@Observable`. `NetworkProbe` bridges Network.framework callbacks with `Once`, a resume-exactly-once continuation helper.
 - **State wrapper:** in view files, use `@ViewState`, a private `typealias ViewState<Value> = SwiftUI.State<Value>` that avoids a same-named SDK macro. Redeclare it in each new view file.
 - **Style:** comments are sparse and explain *why*. User-facing copy is full sentences with curly apostrophes (’). Errors shown to users are `String?` messages, not typed error UI.
 - **Bookmark schema:** `bookmarks.json` must keep decoding. Any new `Bookmark` field must be optional or decoded with `decodeIfPresent`, because a decode failure leaves the file untouched and shows an error.
+- **Bookmark identity:** compare addresses with `BrowserAddress.bookmarkKey`, which normalizes scheme/host case, default ports and an empty root path while preserving distinct protocols, paths, queries and fragments. Adding an existing address opens its editor. On load, keep the first duplicate and back up the original JSON as `bookmarks-before-deduplication-<UUID>.json` before persisting deduplication. Read or migration failures disable writes to protect the original file. Discovery refreshes and clearing scan results must never remove saved bookmarks.
 - **Seed bookmark:** `CoreChecks` asserts it is exactly `[.httpForever]`.
+- **Endpoint labels:** always show the effective port after a displayed host, device name or IP in bookmark/discovery labels and Page Info endpoint details, including HTTP 80 and HTTPS 443. Use `DeviceStore.endpointLabel(host:port:)` to bracket IPv6 addresses. Keep editable device names independent of ports.
 - **Workflows:** pin every action to a full commit SHA with a `# vX.Y.Z` comment, set `permissions: {}` at the top level and grant the least each job needs, use `persist-credentials: false` on checkout, and never interpolate `${{ }}` expressions into `run:` scripts (pass them through `env:`). zizmor runs on every PR and must stay clean.
 
 ## Privacy and networking rules
@@ -90,8 +101,9 @@ There is no XCUITest target and simulator taps can’t be scripted here, so test
 - WebKit page loads are exempt from the iOS Local Network prompt. Native networking (`NWBrowser`, `NWConnection`, `getaddrinfo` on `.local`) triggers it.
 - **Status dots** run only when the user has turned on **Local Network Features** (UserDefaults key `localNetworkFeatures`), the bookmark list is visible and the app is active. Don’t add background or automatic native probing.
 - **Discovery** runs only when the user has turned on **Local Network Features**. It runs one automatic scan the first time the feature is turned on (or the first time the bookmark list opens after updating with it on), then only from a user action: **Scan Again** or pull-to-refresh. Don’t add automatic Bonjour or port scans.
-- **Port scan** (`PortScan.swift`, run from `LocalNetwork.swift`): never port-scan without a confirmed `PortScanPlan`, never from the automatic first scan, only from a user-started scan, and only addresses in the phone’s own network range (capped at 1,024).
+- **Port scan** (`PortScan.swift`, run from `LocalNetwork.swift`): never port-scan without a confirmed `PortScanPlan`, never from the automatic first scan, only from a user-started scan, and only addresses in the phone’s own network range (capped at 1,024). Check every port in the selected preset on every host in that range, skipping this device; never filter hosts by whether 80 or 443 responds or add Bonjour addresses outside the confirmed range. `PortScanPlan.targets` defines the endpoints and `connectionCount` supplies the confirmation count. Keep concurrency bounded and scans cancellable; large scans can take several minutes.
 - **Diagnostics** run only when the user opens them.
+- **Site icons:** saving a bookmark without an icon may fetch one even with **Local Network Features** off; enabled discovery scans also fetch icons. Rendering lists must only use cached PNGs, and existing bookmarks get icons when saved again. Use raw `NWConnection`, stay on the original scheme/host/port through links and redirects, send no browser cookies or saved passwords, and require normal HTTPS trust. Never use a third-party icon service or certificate override. Bound HTML to 256 KiB and images to 512 KiB, store thumbnails up to 64 pixels, and retain the network symbol when loading fails. Cancel discovery icon work when scanning is cancelled, results are cleared, the feature is disabled or the app leaves the foreground; late results must not restore deleted bookmarks or stale discoveries.
 - **Never a blank page:** any main-frame HTTP response other than 200 must be shown, as the strip above the page or, if it can’t be displayed, as the error screen headed by the status.
   - Error responses are never turned into downloads.
   - Load failures show the exact error domain, code, underlying error and URL.

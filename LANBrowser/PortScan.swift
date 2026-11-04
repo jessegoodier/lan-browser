@@ -89,8 +89,14 @@ struct PortScanPlan: Identifiable, Equatable, Sendable {
     var id: String { "\(preset.rawValue)|\(range.cidr)" }
 
     var addressCount: Int { range.hosts(excluding: deviceIP).count }
-    /// Pass 1 tries ports 80 and 443 on every address to find devices that are on.
-    var discoveryConnections: Int { addressCount * 2 }
+    var connectionCount: Int { addressCount * preset.ports.count }
+
+    /// Every selected port is checked, even on hosts that silently drop 80 and 443.
+    var targets: [(host: String, port: Int)] {
+        range.hosts(excluding: deviceIP).flatMap { host in
+            preset.ports.map { (host: host, port: $0) }
+        }
+    }
 
     /// A scan needs (re)confirmation until one is confirmed, and again on a larger network.
     func needsConfirmation(confirmedCount: Int?) -> Bool {
@@ -113,8 +119,6 @@ struct WebFinding: Equatable, Sendable {
 }
 
 enum PortScan {
-    static let livenessPorts = [80, 443]
-
     /// Drops answers that aren’t useful pages: 400 Bad Request (the port isn’t a web UI),
     /// redirects to another page that was also found (such as HTTP → HTTPS on the same device),
     /// and the HTTP copy of a page the same device also serves over HTTPS.
@@ -140,7 +144,7 @@ enum PortScan {
     /// name, else the server software, else the port.
     static func name(for finding: WebFinding, deviceName: String?) -> String {
         if let title = finding.title { return title }
-        if let deviceName { return finding.port == 80 || finding.port == 443 ? deviceName : "\(deviceName):\(finding.port)" }
+        if let deviceName { return DeviceStore.endpointLabel(host: deviceName, port: finding.port) }
         return finding.server ?? "Web app on port \(finding.port)"
     }
 
